@@ -53,6 +53,12 @@ get written, a job is finished and an invoice has to go out. Often the wish is a
 customers while the hours go into what happens after. Say that out loud if you hear it, and let
 the owner pick which one to work on.
 
+**When the wish is about getting customers, sales or leads, always ask the first question above,
+even if another task has already come up.** A complaint about something that isn't working
+(marketing, posts, ads) is not the work under the wish. It's the wish again. The work that
+takes the hours usually starts *after* a customer shows up, and the owner won't bring it up on
+their own.
+
 **3. What does it cost now?**
 - *"How many of those did you do last month?"*
 - *"How long did the last one take you, start to finish?"*
