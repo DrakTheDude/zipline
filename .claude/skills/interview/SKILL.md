@@ -1,16 +1,18 @@
 ---
 name: interview
 description: >
-  Turns a goal like "more sales" or "more leads" into a brief: one piece of recurring work, what it
-  costs the owner now in their own numbers, how they'd know a draft is right, and the checks that
-  catch what went wrong before. Use when the owner says "interview me", "write my brief", "help me
-  get specific", "what should I work on first", or states a goal with no number in it. Run it
-  before any drafting skill, because the brief is what the drafts get judged against.
+  Turns a goal ("more leads") or a headache ("customers keep calling about their orders") into a
+  brief: one piece of recurring work, what it costs the owner now in their own numbers, how they'd
+  know a draft is right, and the checks that catch what went wrong before. Use when the owner says
+  "interview me", "write my brief", "help me get specific", "what should I work on first", or
+  states a goal or complaint with no number in it. Run it before any drafting skill, because the
+  brief is what the drafts get judged against.
 ---
 
-# Interview: from a wish to a brief
+# Interview: from a wish or a headache to a brief
 
-A goal with no number in it is a wish. A brief names one piece of recurring work, what it costs
+A goal with no number in it is a wish. A complaint with no number in it is a headache. Both are
+where people start, and neither is something you can hand to an assistant. A brief names one piece of recurring work, what it costs
 now, and how you'd know it's done right. Most people can't write the last part on their own, and
 that part is the reason to run this.
 
@@ -29,32 +31,39 @@ them back and says they're theirs.
    "How do you usually..." gets the version they wish were true.
 4. **Plain words.** Say "assistant", "draft", "check". Don't say AI, agent, model, prompt or LLM.
 5. **Don't pitch, don't solve.** No suggestions until the read-back. This is listening.
-6. **It's fine to stop short.** If no recurring work with a cost turns up, say so and write a
-   "not ready yet" brief (see the end). Never force a brief.
+6. **It's fine to stop short.** If no recurring work turns up, say so and write a "not ready
+   yet" brief (see the end). Never force a brief. But work that's clearly there with a cost
+   nobody has counted is a brief, not a "not ready": the cost goes in as "unknown".
 
 ## The questions
 
 These are rungs, not a script. Skip any rung the owner has already answered, and stop climbing
 once the brief is complete.
 
-**1. What have you already tried, and what broke?**
-Use it to open. It tells you how much they've done (don't ask them to rate themselves; people
-rate themselves high and it tells you nothing). It surfaces the first incident (rung 6). And it
+**1. Start from what they brought, then: what have you already tried, and what broke?**
+Don't steer the opening toward sales or growth. Ask what they want fixed first, in their words,
+and take whatever comes: a goal ("more customers"), a headache ("people keep calling about
+orders"), or a task ("quotes take forever"). Then ask what they've tried about it. That tells
+you how much they've done (don't ask them to rate themselves; people rate themselves high and it
+tells you nothing). It surfaces the first incident (rung 6). And it
 moves the conversation from wishes to events straight away.
 
-**2. Find the work under the wish.**
-If the goal is an outcome ("more customers", "grow sales"), don't argue with it. Go to the work
-next to it:
-- *"When a new customer or lead does come in, what do you have to do next?"*
-- *"Think of the last one. What did you do between hearing from them and getting paid?"*
+**2. Find the work under the wish or the headache.**
+Whatever they opened with, find the recurring work that sits on it:
+- **A headache** ("customers keep calling", "the site shows the wrong stock"): *"Think of the
+  last time that happened. What did you have to do because of it?"* The work is what the
+  headache costs them each time: looking something up, writing a reply, fixing a listing.
+- **A goal** ("more customers", "grow sales"): don't argue with it. Go to the work next to it:
+  - *"When a new customer or lead does come in, what do you have to do next?"*
+  - *"Think of the last one. What did you do between hearing from them and getting paid?"*
 
 You're looking for **recurring work with a start and an end**: a call ends and a proposal has to
 get written, a job is finished and an invoice has to go out. Often the wish is about getting
 customers while the hours go into what happens after. Say that out loud if you hear it, and let
 the owner pick which one to work on.
 
-**When the wish is about getting customers, sales or leads, always ask the first question above,
-even if another task has already come up.** A complaint about something that isn't working
+**When the wish is about getting customers, sales or leads, always ask *"when a new customer
+or lead does come in, what do you have to do next?"*, even if another task has already come up.** A complaint about something that isn't working
 (marketing, posts, ads) is not the work under the wish. It's the wish again. The work that
 takes the hours usually starts *after* a customer shows up, and the owner won't bring it up on
 their own.
@@ -84,7 +93,11 @@ claim there is. If nothing has gone wrong yet, write no claim. Don't make one up
 **7. What must never go out without you?**
 *"What's the one thing you'd be upset to find the assistant decided on its own?"*
 Prices, dates, promises, anything sent to a customer are the usual answers. Each one becomes a
-stop-and-ask rule. Sending is always on this list, whether or not they say it.
+stop-and-ask rule, in their words.
+
+**Sending is always stop-and-ask, but it's this setup's rule, not theirs.** Don't add it to
+their list, and don't put it in the read-back: the read-back asks "is this yours?", and it
+isn't. Tell them once, after they've said yes (see below).
 
 ## The read-back
 
@@ -94,15 +107,27 @@ Read the brief back in their words, short:
 > Now: **[their number]** a [week/month]. [Or: unknown, and you'll time the next [their count].]
 > Done right means: **[criteria]**.
 > Has gone wrong before: **[incident]**, found out when **[how]**.
-> Never without you: **[gates]**.
+> Never without you: **[their gates, their words]**.
+
+**One piece of work per brief.** If the read-back names more than one task ("quotes, proposals
+and follow-up"), ask the owner to pick one for now and list the rest under "next". A brief that
+covers three tasks can't be checked against any of them.
 
 Then ask: *"Is that yours? What's wrong with it?"* Fix what they correct. Write the files only
 after a yes.
 
+After the yes, one line before writing: *"One more thing that isn't from you: this setup never
+sends anything to anyone without your OK. That's built in."* Don't ask them to confirm it.
+
 ## business/brief.md
 
 The read-back, plus where the inputs live, plus their own phrasing of the original wish (keep it;
-it's how they'll recognise the brief later).
+it's how they'll recognise the brief later). End with its own section, kept apart from theirs:
+
+```markdown
+## Set by this setup (not from the interview)
+- Nothing is sent to anyone without the owner's OK.
+```
 
 ## business/claims.ini
 
@@ -127,7 +152,8 @@ needs = a draft proposal exists in drafts/
 
 ## When it isn't ready
 
-If after rung 3 there's still no recurring work with a cost attached, don't push. Write a brief
+If after rung 2 there's still no recurring work, don't push. (Work you found but nobody has
+counted is not this case. That's a brief with "unknown" in it.) Write a brief
 that says so honestly: the wish in their words, the closest work you found, and **one thing to
 notice this week** (*"jot down every time you write a quote and how long it took"*). Then offer
 to run the interview again next week. A real "not yet" beats an invented brief.
