@@ -48,6 +48,12 @@ SABOTAGE = {  # claim-name fragment: (file, old, new) or a shell command
     "near-miss signature": ("tools/hooks.py", "    if near:\n", "    if False:\n"),
     "subagent's report can't sign": ("tools/hooks.py", 'if SYSTEM_MESSAGE.match(str(event.get("prompt", ""))):',
                                      "if False:"),
+    "same rule for writing files": ("tools/gates.py", "        for path in written_paths(words, cwd) + redirect_targets(part, cwd):",
+                                    "        for path in []:"),
+    "here-document is": ("tools/gates.py", "        return m.group(0) if prog in SHELLS else \"\\n\"",
+                         "        return \"\\n\""),
+    "latest request, not one": ("tools/hooks.py", 'recent = [g for g in pending if g["created"] >= since]',
+                                "recent = pending"),
 }
 
 def run(copy):

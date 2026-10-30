@@ -50,8 +50,10 @@ Be clear about this before trusting it with anything sensitive:
   a draft links to an image on the web, the preview fetches it, like any email client would.
 - **Signatures stop what the gate can recognise, not everything.** `tools/gates.py` reads
   commands and tool names: package installs, deletes, moves, mail, uploads, pushes, connector
-  actions that send, charge or delete, and in strict mode anything that reaches an address not
-  on your list. An action disguised as something else (a script that quietly sends email) gets
+  actions that send, charge or delete, files written outside this folder (by the editor or by
+  shell commands such as `cp`, `tee`, `sed -i`, redirects and `git apply`, following `cd`), and
+  in strict mode anything that reaches an address not on your list. An action disguised as
+  something else (a script that quietly sends email, or writes a file without saying so) gets
   past it. It guards against an assistant that is confident and wrong, not one trying to hide
   what it does.
 - **The journal and `.zipline/` are protected by the same reading of commands.** Direct writes,

@@ -162,7 +162,30 @@ def classify_bash(command, s, root):
                     "own record. Nothing the assistant runs may change them, signed or not. "
                     "Reading them with cat, tail, grep or ls is fine.")
     gates = []
-    for words in segments(command):
+    # Files the command writes go through the same rule as the editor (write_gate). Follow `cd`
+    # so `cd /other/project && git apply x.patch` is judged where it actually writes.
+    cwd = root
+    for part in re.split(r"\|\||&&|;|\||\n", shell_text(command)):
+        try:
+            words = shlex.split(part, comments=True)
+        except ValueError:
+            words = part.split()
+        while words and (words[0] in ("sudo", "doas", "env", "nohup", "time", "exec")
+                         or re.match(r"^\w+=", words[0])):
+            words = words[1:]
+        if not words:
+            continue
+        if words[0] == "cd":
+            target = words[1] if len(words) > 1 else "~"
+            cwd = (cwd / os.path.expandvars(os.path.expanduser(target))).resolve()
+            continue
+        for path in written_paths(words, cwd) + redirect_targets(part, cwd):
+            g = write_gate(path, root)
+            if g and g.blocked:
+                return g
+            if g and all(g.phrase != x.phrase for x in gates):
+                gates.append(g)
+    for words in segments(shell_text(command)):
         tool = pathlib.Path(words[0]).name
         args = [w for w in words[1:] if not w.startswith("-")]
         if tool == "python3" and "tools/setup.py" in " ".join(words) and "--install" in words:
@@ -245,6 +268,91 @@ def classify_bash(command, s, root):
     return first
 
 
+def write_gate(path, root):
+    """The one rule for writing a file, whichever tool does it. The editor had this rule and the
+    shell didn't: `cp` or `sed -i` into a folder outside this one went through unsigned while the
+    editor asked for the same change. Found while about to update another project's notes."""
+    path = str(path)
+    name = short(pathlib.Path(path).name)
+    if in_project(path, root) and inside(path, root, *SEALED):
+        return Gate("change", "safeguards", blocked="journal/ and .zipline/ are the "
+                    "safeguards' own record. Nothing the assistant writes may change them.")
+    if inside(path, root, "ready"):
+        return Gate("approve", name, [f"puts {pathlib.Path(path).name} in ready/, which "
+                                      "means you've approved it to go out"])
+    exists = pathlib.Path(path).expanduser().exists()
+    if exists and inside(path, root, *OWNER):
+        return Gate("overwrite", name, [f"changes your {path}", "the current version "
+                                        "is replaced"])
+    if not in_project(path, root) and (str(pathlib.Path(path).expanduser()).startswith(
+            (tempfile.gettempdir() + os.sep, "/tmp/")) or path.startswith("/dev/")):
+        return None  # the system's temp folder is scratch space, the same as for rm
+    if not in_project(path, root):
+        return Gate("overwrite" if exists else "write", name,
+                    [f"{'changes' if exists else 'creates'} {path}, outside this folder"])
+    return None
+
+
+# Shell commands that write files, and which of their arguments they write to.
+IN_PLACE = {"sed": ("-i", "--in-place"), "perl": ("-i", "-pi")}
+GIT_WRITES = {"apply", "checkout", "restore", "reset", "am", "stash", "pull", "merge", "rebase"}
+
+
+def written_paths(words, cwd):
+    """Files a simple command writes, as absolute paths. Only what can be read off the command:
+    a script that writes files without saying so can't be seen here."""
+    tool = pathlib.Path(words[0]).name
+    args = [w for w in words[1:] if not w.startswith("-")]
+    out = []
+    if tool in ("cp", "install", "ln", "rsync") and len(args) >= 2 and not hosts_in(args[-1:]):
+        dest = cwd / os.path.expanduser(args[-1])
+        # Copying into a folder writes a file named after the source: name that, not the folder.
+        out += ([str(dest / pathlib.Path(a).name) for a in args[:-1]]
+                if args[-1].endswith("/") or dest.is_dir() else [args[-1]])
+    elif tool in ("touch", "mkdir", "tee", "truncate"):
+        out += args
+    elif tool == "patch":
+        out.append(".")
+    elif tool in IN_PLACE and any(w.startswith(IN_PLACE[tool]) for w in words[1:]):
+        out += args[1:] if tool == "sed" else args
+    elif tool == "dd":
+        out += [w[3:] for w in words if w.startswith("of=")]
+    elif tool in ("tar", "unzip") and re.search(r"(^|\s)(-\w*x|x\w*f|-d|-C)\b", " ".join(words[1:])):
+        out.append(next((words[i + 1] for i, w in enumerate(words)
+                         if w in ("-C", "-d") and i + 1 < len(words)), "."))
+    elif tool == "git" and args[:1] and args[0] in GIT_WRITES:
+        out.append(".")
+    return [str((cwd / os.path.expandvars(os.path.expanduser(p))).resolve()) for p in out if p]
+
+
+HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n(.*?)\n\s*\2\s*(?:\n|$)", re.S)
+SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
+
+
+def shell_text(command):
+    """The command as the shell will run it. A here-document's body is input for the program it's
+    fed to, not shell syntax: a Python script's string ">> ~/x" is not a redirect. The first
+    version read it as one and stopped a test script. Bodies fed to a shell are kept, because
+    those really are commands."""
+    def keep_or_drop(m):
+        line_start = command.rfind("\n", 0, m.start()) + 1
+        words = command[line_start:m.start()].split()
+        prog = pathlib.Path(next((w for w in words if not re.match(r"^\w+=", w)
+                                  and w not in ("sudo", "env")), "")).name
+        return m.group(0) if prog in SHELLS else "\n"
+    return HEREDOC.sub(keep_or_drop, command)
+
+
+def redirect_targets(text, cwd):
+    targets = []
+    for m in re.finditer(r"(?<![<&])\d?>>?\s*([^\s;&|<>()]+)", text):
+        t = m.group(1).strip("'\"")
+        if t.startswith("&") or t.startswith("/dev/"):
+            continue
+        targets.append(str((cwd / os.path.expandvars(os.path.expanduser(t))).resolve()))
+    return targets
+
+
 def classify(tool_name, tool_input, s, root):
     root = pathlib.Path(root)
     tool_input = tool_input or {}
@@ -252,26 +360,7 @@ def classify(tool_name, tool_input, s, root):
         return classify_bash(str(tool_input.get("command", "")), s, root)
     if tool_name in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
         path = str(tool_input.get("file_path") or tool_input.get("notebook_path") or "")
-        if not path:
-            return None
-        name = short(pathlib.Path(path).name)
-        if in_project(path, root) and inside(path, root, *SEALED):
-            return Gate("change", "safeguards", blocked="journal/ and .zipline/ are the "
-                        "safeguards' own record. Nothing the assistant writes may change them.")
-        if inside(path, root, "ready"):
-            return Gate("approve", name, [f"puts {pathlib.Path(path).name} in ready/, which "
-                                          "means you've approved it to go out"])
-        exists = pathlib.Path(path).expanduser().exists()
-        if exists and inside(path, root, *OWNER):
-            return Gate("overwrite", name, [f"changes your {path}", "the current version "
-                                            "is replaced"])
-        if not in_project(path, root) and str(pathlib.Path(path).expanduser()).startswith(
-                (tempfile.gettempdir() + os.sep, "/tmp/")):
-            return None  # the system's temp folder is scratch space, the same as for rm
-        if not in_project(path, root):
-            return Gate("overwrite" if exists else "write", name,
-                        [f"{'changes' if exists else 'creates'} {path}, outside this folder"])
-        return None
+        return write_gate(path, root) if path else None
     if tool_name == "WebFetch" and s["network"] == "strict":
         host = (hosts_in([str(tool_input.get("url", ""))]) or ["a website"])[0]
         if not allowed(host, s["allow"]):

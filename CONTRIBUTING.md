@@ -34,6 +34,11 @@ python3 tools/check_claims_can_fail.py     and every one of them can still go re
 - **Say what you ran and what it showed.** "Should work" isn't a result.
 - **Change one thing.** A pull request that fixes the loop rule and rewrites the setup tool
   can't be tested as either.
+- **Editing the gate with its hooks on, keep it working at every step.** If an edit leaves
+  `tools/gates.py` or `tools/hooks.py` broken (a call to a function you haven't added yet), the
+  gate fails closed and refuses every editor action, including the one that would fix it. Add
+  new functions before anything calls them. If you lock yourself out,
+  `git checkout -- tools/gates.py` puts back the last working version.
 
 ## House rules, and why
 

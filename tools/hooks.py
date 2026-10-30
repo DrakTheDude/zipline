@@ -225,8 +225,16 @@ def sign(event):
     """If the message is a signature for a pending request, grant it. Returns True if this
     message was about a signature, so it isn't also read as the person repeating themselves."""
     typed = normalise(event.get("prompt", ""))
+    # "yes" and near misses only answer a request raised since the person's last message. The
+    # first version matched a request the assistant had dropped half an hour earlier, so "yes,
+    # close the gap" (an answer to a question) was told "that isn't a signature for install gimp".
+    state = load_state(event.get("session_id"))
+    since = state.get("last_prompt_at", 0)
+    state["last_prompt_at"] = time.time()
+    save_state(state)
     grants = load_grants()
     pending = [g for g in grants if g["status"] == "pending"]
+    recent = [g for g in pending if g["created"] >= since]
     if not pending:
         save_grants(grants)
         if any(g["status"] == "expired" and g["phrase"] == typed for g in grants):
@@ -247,7 +255,7 @@ def sign(event):
     save_grants(grants)
     # Close but not exact ("install gimp please") is the dangerous case: the person believes they
     # signed, and nothing said otherwise. The first version stayed silent on it.
-    near = next((g for g in reversed(pending) if g["phrase"] in typed or
+    near = next((g for g in reversed(recent) if g["phrase"] in typed or
                  difflib.SequenceMatcher(None, typed, g["phrase"]).ratio() > 0.8), None)
     if near:
         journal("not-signed", f'"{typed[:40]}" is close to, not exactly, "{near["phrase"]}"')
@@ -255,8 +263,8 @@ def sign(event):
             f"'{typed}', and it has to be exactly: {near['phrase']}. Tell them it didn't count "
             "yet, and why; don't run the action.")
         return True
-    if YES.match(typed):
-        phrases = ", ".join(sorted({g["phrase"] for g in pending}))
+    if YES.match(typed) and recent:
+        phrases = ", ".join(sorted({g["phrase"] for g in recent}))
         journal("not-signed", f'"{typed[:40]}" while waiting for: {phrases}')
         say("UserPromptSubmit", f"zipline: that isn't a signature. Waiting for the person to "
             f"type exactly: {phrases}. Say so plainly; don't run the action.")
