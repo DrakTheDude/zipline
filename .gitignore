@@ -2,7 +2,7 @@
 CLAUDE.local.md
 research/
 .claude/settings.local.json
-.look/
+previews/
 # The business's own files: they stay on this computer
 brand/
 drafts/

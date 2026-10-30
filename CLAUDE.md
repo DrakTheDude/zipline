@@ -22,7 +22,7 @@ Keep everything in this folder, in these places, so the person always knows wher
 | a piece of work in progress | `drafts/<short-name>/`, one folder per job |
 | each new version of a draft | a new file: `<name>-v1.html`, `<name>-v2.html`, ... Never overwrite the last one; "the earlier one was better" is common. |
 | finished and approved by the person, ready for them to send | `ready/`, only after their OK |
-| preview pictures | `.look/` (made by `tools/look.py`, throwaway) |
+| preview pictures | `previews/` (made by `tools/look.py`, safe to delete) |
 | what went wrong and what worked | `lessons.md` |
 
 Drafts refer to `brand/` files rather than copying them. All of this stays on this computer:

@@ -3,7 +3,7 @@
 
 usage: python3 tools/look.py <file> [<file> ...]
 
-Writes PNGs to .look/ in the repo root and prints their paths. Open them (the Read tool shows
+Writes PNGs to previews/ in the repo root and prints their paths. Open them (the Read tool shows
 images) before telling anyone what a draft looks like.
 
 - .svg          -> rsvg-convert
@@ -21,7 +21,7 @@ python3 tools/setup.py checks all of these.
 import html.parser, pathlib, shutil, subprocess, sys, tempfile, urllib.parse
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT = ROOT / ".look"
+OUT = ROOT / "previews"
 
 
 class Refs(html.parser.HTMLParser):
