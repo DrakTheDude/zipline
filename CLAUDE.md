@@ -5,6 +5,29 @@ these rules is that the two of you get to a result that works, without going rou
 on the way. If `workalong.md` exists, read it first: it says what this business is and sets the
 limits below.
 
+## First time here: get the workspace ready
+
+If `brand/`, `drafts/` or `ready/` don't exist yet, or a tool below fails, run
+`python3 tools/setup.py`. It checks for what drafts need (pictures of logos, emails, PDFs and
+office files, plus free-to-use fonts), creates the folders, and prints the install command for
+anything missing. **Show the person that command and ask before running it** with `--install`.
+
+## Where things go
+
+Keep everything in this folder, in these places, so the person always knows where to look:
+
+| what | where |
+|---|---|
+| their logo, colours, fonts, anything every draft reuses | `brand/` |
+| a piece of work in progress | `drafts/<short-name>/`, one folder per job |
+| each new version of a draft | a new file: `<name>-v1.html`, `<name>-v2.html`, ... Never overwrite the last one; "the earlier one was better" is common. |
+| finished and approved by the person, ready for them to send | `ready/`, only after their OK |
+| preview pictures | `.look/` (made by `tools/look.py`, throwaway) |
+| what went wrong and what worked | `lessons.md` |
+
+Drafts refer to `brand/` files rather than copying them. All of this stays on this computer:
+it's left out of git, so nothing about the business gets published by accident.
+
 ## Before you make anything that matters, agree how you'll check it
 
 A draft without a check is a guess. Before the first attempt, settle two things with the person:
@@ -27,7 +50,7 @@ Small and obvious tasks don't need this. Anything that leaves the building does.
 
 ## Look before you show
 
-You can't judge a logo, an email or a PDF from its code. Before you tell the person what a
+You can't judge a logo, an email, a PDF or a Word file from its code. Before you tell the person what a
 visual draft looks like, run:
 
 ```
@@ -44,8 +67,8 @@ themselves a test before the real send.
 
 ## Count your attempts, and stop at the limit
 
-An attempt is another go at the same thing: a new version of the draft, another fix to the
-same script. The limit is in `workalong.md`. **Without it, the limit is 3.**
+An attempt is another go at the same thing: a new version of the draft (each one is a new
+`-vN` file, so the folder shows the count), another fix to the same script. The limit is in `workalong.md`. **Without it, the limit is 3.**
 
 When you reach it, don't make another attempt. Reset instead (next section).
 
@@ -77,6 +100,7 @@ Drafts only. Wait for an explicit yes before you:
 - set or change a price, a date, or a promise to a customer
 - delete, overwrite or move their files
 - spend money or sign up for anything
+- install software on their computer
 
 These apply at every level, and `workalong.md` can add to them but not take any away.
 

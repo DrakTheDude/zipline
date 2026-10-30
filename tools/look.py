@@ -11,10 +11,12 @@ images) before telling anyone what a draft looks like.
                    Also checks that every local file the page refers to (images, styles,
                    links) exists.
 - .pdf          -> pdftoppm, first 3 pages
+- .docx .doc .odt .xlsx .xls .ods .pptx .odp -> LibreOffice to PDF, then as a PDF
 - .png / .jpg   -> already a picture, printed as is
 
 Exit code = the number of problems found, so 0 means it rendered and nothing was missing.
-Needs: librsvg2-bin, poppler-utils, and firefox or weasyprint.
+Needs: librsvg2-bin, poppler-utils, and firefox or weasyprint. LibreOffice for office files.
+python3 tools/setup.py checks all of these.
 """
 import html.parser, pathlib, shutil, subprocess, sys, tempfile, urllib.parse
 
@@ -75,6 +77,25 @@ def render_pdf(src, png):
     return (pages, None) if ok and pages else ([], err or "no pages rendered")
 
 
+OFFICE = (".docx", ".doc", ".odt", ".rtf", ".xlsx", ".xls", ".ods", ".pptx", ".ppt", ".odp")
+
+
+def render_office(src, png):
+    soffice = shutil.which("soffice") or shutil.which("libreoffice")
+    if not soffice:
+        return [], "LibreOffice missing: run python3 tools/setup.py"
+    with tempfile.TemporaryDirectory() as tmp:
+        # own profile dir, so it works while LibreOffice is open on the desktop
+        ok, err = run([soffice, f"-env:UserInstallation=file://{tmp}/profile", "--headless",
+                       "--convert-to", "pdf", "--outdir", tmp, str(src)])
+        pdf = pathlib.Path(tmp) / (src.stem + ".pdf")
+        if not (ok and pdf.exists()):
+            return [], err or "LibreOffice couldn't convert it"
+        kept = OUT / (src.stem + ".pdf")
+        shutil.copy(pdf, kept)
+    return render_pdf(kept, png)
+
+
 def look(path):
     src = pathlib.Path(path).resolve()
     problems = []
@@ -94,6 +115,8 @@ def look(path):
         pics, err = render_html(src, png)
     elif kind == ".pdf":
         pics, err = render_pdf(src, png)
+    elif kind in OFFICE:
+        pics, err = render_office(src, png)
     elif kind in (".png", ".jpg", ".jpeg", ".gif", ".webp"):
         pics, err = [src], None
     else:

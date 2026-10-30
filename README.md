@@ -1,33 +1,64 @@
-# (name to come)
+# zipline
 
-A starting point you clone to work *with* an assistant on your business: you steer, and it drafts.
+**From "this is amazing" to "this actually works", without the crash in between.**
 
-**Early days. Nothing here runs yet.**
+Most people who start working with an assistant go through the same curve: a burst of
+excitement, then a hard drop when it confidently gets things wrong, goes round in circles on
+the twentieth version of an email, or can't make what they had in mind. Many give up there.
+The ones who stick with it get to a steady, useful place on the other side.
+
+zipline is a folder you open in Claude Code that takes you straight across. You steer, the
+assistant drafts, and a few built-in habits keep the two of you from going in circles.
+
+**Early days. It works and we're refining it.**
 
 > **This is not an image generator.** It won't make AI art, so don't ask it to. Graphics are built
 > the way a designer builds them: real fonts, real layouts, vector shapes (HTML/SVG → PDF). You can
 > open, edit and reuse every file.
 
-## What it will do
+## What it does
 
-- **Turn a goal into a brief.** "More sales" isn't a brief. A short interview works out what done
-  looks like, in numbers you'd recognise.
-- **Write down the checks.** For each thing that went wrong before, there's a check that runs and
-  can fail. It isn't a note the assistant is free to ignore.
-- **Draft, never send.** Prices, commitments and anything leaving the building wait for you.
+- **Agrees the check before the draft.** What goes in, and how you'll both know it's right,
+  before the first attempt. Most loops start with an input nobody looked at.
+- **Says what it can't make, up front.** Not after the third disappointing try.
+- **Looks before it shows.** Logos, emails, PDFs and office files are turned into pictures the
+  assistant checks before telling you what it made. It also catches missing pieces, like an
+  email pointing at a logo file that isn't there.
+- **Stops going in circles.** It counts attempts. At the limit, or when you're repeating
+  yourself, it stops, says back what it thinks the goal is, and asks the one question that
+  would change the approach.
+- **Drafts, never sends.** Sending, prices, dates, deleting files, spending money and installing
+  software all wait for your OK.
+- **Remembers what went wrong.** Lessons go in `lessons.md`, and the assistant reads them before
+  similar work.
+
+## Getting started
+
+You need [Claude Code](https://claude.com/claude-code), through a Claude subscription or your
+own API key.
+
+```
+git clone https://github.com/DrakTheDude/zipline.git
+cd zipline
+claude
+```
+
+Then say what you want to get done. The first time, the assistant runs `tools/setup.py` to
+check your computer has what drafts need, and asks before installing anything.
+
+Your work stays on your computer: `brand/` for your logo and colours, `drafts/` for work in
+progress (every version kept), `ready/` for what you've approved. None of it is uploaded.
 
 ## Builds on
 
 The [Small Business plugin](https://github.com/anthropics/knowledge-work-plugins/tree/main/small-business)
-for Claude Code (proposals, invoices, payroll prep, and more) is turned on automatically when you
-open this folder. This repo adds the part before it: deciding what you want and how you'll know
-you got it.
+for Claude Code (proposals, invoices, payroll prep and more) is turned on when you open this
+folder. zipline adds the working habits around it.
 
 ## Who it's for
 
-People who already use an assistant for work and are comfortable in a terminal, or the one
-technical person a business relies on. You'll need Claude Code, through a Claude subscription or
-your own API key.
+People who already use an assistant for work and are comfortable opening a terminal, or the one
+technical person a business relies on.
 
 ## License
 

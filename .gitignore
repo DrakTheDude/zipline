@@ -3,3 +3,10 @@ CLAUDE.local.md
 research/
 .claude/settings.local.json
 .look/
+# The business's own files: they stay on this computer
+brand/
+drafts/
+ready/
+lessons.md
+workalong.md
+__pycache__/
