@@ -157,10 +157,18 @@ def save_grants(grants):
     GRANTS.write_text(json.dumps(grants, indent=1))
 
 
+# Fields the assistant writes about an action, rather than the action itself. Claude Code's Bash
+# tool carries a `description` the assistant rewords on every call; the first version hashed it,
+# so a signed command run again with a reworded description was stopped again: sign, stopped,
+# sign again. The fixture never caught it because it sent one-key events that never varied.
+NOT_THE_ACTION = {"description"}
+
+
 def fingerprint(tool, tool_input):
     """The exact action. A signature covers this and nothing else: if the command changes after
     signing, the specifics changed, and it needs signing again."""
-    raw = json.dumps([tool, tool_input], sort_keys=True)
+    action = {k: v for k, v in tool_input.items() if k not in NOT_THE_ACTION}
+    raw = json.dumps([tool, action], sort_keys=True)
     return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
 
@@ -237,6 +245,16 @@ def sign(event):
             "happened, and if it failed, show how.")
         return True
     save_grants(grants)
+    # Close but not exact ("install gimp please") is the dangerous case: the person believes they
+    # signed, and nothing said otherwise. The first version stayed silent on it.
+    near = next((g for g in reversed(pending) if g["phrase"] in typed or
+                 difflib.SequenceMatcher(None, typed, g["phrase"]).ratio() > 0.8), None)
+    if near:
+        journal("not-signed", f'"{typed[:40]}" is close to, not exactly, "{near["phrase"]}"')
+        say("UserPromptSubmit", f"zipline: close, but not a signature: the person typed "
+            f"'{typed}', and it has to be exactly: {near['phrase']}. Tell them it didn't count "
+            "yet, and why; don't run the action.")
+        return True
     if YES.match(typed):
         phrases = ", ".join(sorted({g["phrase"] for g in pending}))
         journal("not-signed", f'"{typed[:40]}" while waiting for: {phrases}')
@@ -246,7 +264,17 @@ def sign(event):
     return False
 
 
+# Claude Code also delivers its own messages through this event: when a subagent finishes, its
+# report arrives wrapped in <task-notification>. Found in a real session, where a subagent's
+# report quoting "connect example.org" was read as a near-miss signature. A report is written by
+# the assistant's side, so it must never sign: the model can't sign its own contract.
+SYSTEM_MESSAGE = re.compile(r"^\s*<(task-notification|system-reminder|command-[\w-]+|"
+                            r"local-command-[\w-]+|[\w-]+-notification)\b", re.I)
+
+
 def prompt(event):
+    if SYSTEM_MESSAGE.match(str(event.get("prompt", ""))):
+        return  # not typed by the person: can't sign, isn't a near miss, isn't them repeating
     if sign(event):
         return
     text = str(event.get("prompt", ""))

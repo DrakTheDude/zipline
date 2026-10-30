@@ -30,7 +30,7 @@ SABOTAGE = {  # claim-name fragment: (file, old, new) or a shell command
                                  'live["used_at"] = time.time()'),
     '"yes" is not a signature': ("tools/hooks.py", 'if g["phrase"] == typed), None)',
                                  'if g["phrase"] == typed or YES.match(typed)), None)'),
-    "changed command after signing": ("tools/hooks.py", "raw = json.dumps([tool, tool_input], sort_keys=True)",
+    "changed command after signing": ("tools/hooks.py", "raw = json.dumps([tool, action], sort_keys=True)",
                                       "raw = json.dumps([tool], sort_keys=True)"),
     "after the request expired": ("tools/hooks.py", 'if g["status"] in ("pending", "granted") and now - start > ttl:',
                                   'if False:'),
@@ -41,6 +41,13 @@ SABOTAGE = {  # claim-name fragment: (file, old, new) or a shell command
     "ordinary work isn't gated": ("tools/hooks.py", "    if gate is None:\n        return\n    if gate.blocked:",
                                   "    if gate is None:\n        gate = gates.Gate('check', 'this')\n    if gate.blocked:"),
     "gate itself fails": ("tools/hooks.py", 'if event_name == "before-tool":', "if False:"),
+    # Puts back the original bug: the description the assistant rewords is part of what's signed.
+    "rewording its own description": ("tools/hooks.py",
+                                      "action = {k: v for k, v in tool_input.items() if k not in NOT_THE_ACTION}",
+                                      "action = tool_input"),
+    "near-miss signature": ("tools/hooks.py", "    if near:\n", "    if False:\n"),
+    "subagent's report can't sign": ("tools/hooks.py", 'if SYSTEM_MESSAGE.match(str(event.get("prompt", ""))):',
+                                     "if False:"),
 }
 
 def run(copy):

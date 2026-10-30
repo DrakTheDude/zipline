@@ -63,6 +63,11 @@ Be clear about this before trusting it with anything sensitive:
   is sent, which is gated.
 - **A signature can't stop you from approving something you shouldn't.** It makes sure you were
   shown the specifics first.
+- **Only what you type can sign.** Claude Code also passes its own messages through the same
+  place (a subagent's finished-task report, for one), and those are ignored, even if they
+  contain the exact phrase. This is matched on the wrappers Claude Code uses today; a new kind
+  of system message in a future version would need adding. Gated actions inside a subagent are
+  stopped the same as in the main session (tested).
 
 ## 🔴 Don't attach your business files to a report
 
