@@ -4,9 +4,10 @@ research/
 .claude/settings.local.json
 previews/
 # The business's own files: they stay on this computer
-brand/
-drafts/
-ready/
-lessons.md
-workalong.md
+# Anchored with / so a file of the same name elsewhere (docs/workalong.md) isn't hidden too
+/brand/
+/drafts/
+/ready/
+/lessons.md
+/workalong.md
 __pycache__/
