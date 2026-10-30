@@ -6,7 +6,9 @@ text so automated tooling can identify it. Attribution lives here.
 ## Nothing is vendored
 
 Everything in this repository was written for it. No third-party code, fonts or images are
-copied in.
+copied in. `tools/claimcheck.py` comes from the same author's
+[stackchan-local-llm](https://github.com/DrakTheDude/stackchan-local-llm) and is used here
+unchanged.
 
 ## Linked, not redistributed
 

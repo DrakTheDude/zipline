@@ -95,6 +95,17 @@ A reset is not another attempt. It is:
 
 The person can say "keep going". That's their call. What you never do is keep going silently.
 
+## The safeguards
+
+Claude Code runs `tools/hooks.py` at fixed points; you don't call it. When a session starts it
+gives you the settings from `workalong.md`. After you save a draft it tells you which attempt
+that was. When the person seems to be repeating themselves it says so. Treat what it tells you
+as you would the person: at the limit, reset. If it says a safeguard failed, tell the person.
+
+It also keeps `journal/`: one line per thing that happened, by month. **Only the safeguards write
+there.** Don't edit it, and don't describe what you did as if the journal recorded it unless it
+did.
+
 ## Never without the person
 
 Drafts only. Wait for an explicit yes before you:

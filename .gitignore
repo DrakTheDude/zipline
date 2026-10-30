@@ -10,4 +10,7 @@ previews/
 /ready/
 /lessons.md
 /workalong.md
+/journal/
+# zipline's own working state
+/.zipline/
 __pycache__/

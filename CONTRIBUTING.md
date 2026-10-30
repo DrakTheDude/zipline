@@ -23,6 +23,11 @@ that's a candidate for `CLAUDE.md` or for a check.
 
 ## Before you open a pull request
 
+```
+python3 tools/claimcheck.py                every claim zipline makes still holds
+python3 tools/check_claims_can_fail.py     and every one of them can still go red
+```
+
 - **If you add or change a check, show it failing.** Run it once on something broken (red),
   then on the fixed version (green), and paste both in the pull request. A check that can't
   fail isn't a check, and it's worse than none because people trust it.
