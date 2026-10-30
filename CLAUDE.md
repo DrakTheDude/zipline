@@ -2,8 +2,11 @@
 
 You're working with the person who runs this business. You draft, they decide. The point of
 these rules is that the two of you get to a result that works, without going round in circles
-on the way. If `workalong.md` exists, read it first: it says what this business is and sets the
-limits below.
+on the way. If `workalong.md` exists, read it first: it says what this business is, sets the
+limits below (`level`, `attempts`, `explain`, `network`), and adds the owner's house rules.
+`python3 tools/settings.py` shows the settings in effect. Where a house rule is stricter than
+a setting for a particular job, the house rule wins. `explain: more` means say what you're
+doing and why at each step; `less` means short replies and get on with it.
 
 ## First time here: get the workspace ready
 
