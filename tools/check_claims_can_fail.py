@@ -24,6 +24,23 @@ SABOTAGE = {  # claim-name fragment: (file, old, new) or a shell command
     "newline in an answer": ("docs/form.js", 'return String(s || "").replace(/[\\r\\n]+/g, " ").replace(/\\s+/g, " ").trim();', 'return String(s || "");'),
     "format description is in git": "git rm -q --cached docs/workalong.md",
     "business's own files stay out": (".gitignore", "/journal/\n", ""),
+    "GIMP install stops": ("tools/gates.py", "if tool in SOURCES and args and args[0] in INSTALL_WORDS | REMOVE_WORDS:",
+                           "if False:"),
+    "run once, then it stops": ("tools/hooks.py", 'live["status"], live["used_at"] = "used", time.time()',
+                                 'live["used_at"] = time.time()'),
+    '"yes" is not a signature': ("tools/hooks.py", 'if g["phrase"] == typed), None)',
+                                 'if g["phrase"] == typed or YES.match(typed)), None)'),
+    "changed command after signing": ("tools/hooks.py", "raw = json.dumps([tool, tool_input], sort_keys=True)",
+                                      "raw = json.dumps([tool], sort_keys=True)"),
+    "after the request expired": ("tools/hooks.py", 'if g["status"] in ("pending", "granted") and now - start > ttl:',
+                                  'if False:'),
+    "can be read, never changed": ("tools/gates.py", "if not words or pathlib.Path(words[0]).name not in READ_ONLY:",
+                                   "if True:"),
+    "writing the journal directly": ("tools/gates.py", "if in_project(path, root) and inside(path, root, *SEALED):",
+                                     "if False:"),
+    "ordinary work isn't gated": ("tools/hooks.py", "    if gate is None:\n        return\n    if gate.blocked:",
+                                  "    if gate is None:\n        gate = gates.Gate('check', 'this')\n    if gate.blocked:"),
+    "gate itself fails": ("tools/hooks.py", 'if event_name == "before-tool":', "if False:"),
 }
 
 def run(copy):

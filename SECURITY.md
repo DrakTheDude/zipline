@@ -48,8 +48,21 @@ Be clear about this before trusting it with anything sensitive:
   type or show the assistant on your computer.
 - **Previews load what a draft points to.** `tools/look.py` opens HTML drafts in a browser. If
   a draft links to an image on the web, the preview fetches it, like any email client would.
-- **The ask-first rules are instructions, not a lock.** They make the assistant stop and ask;
-  they can't stop you from saying yes to something you shouldn't.
+- **Signatures stop what the gate can recognise, not everything.** `tools/gates.py` reads
+  commands and tool names: package installs, deletes, moves, mail, uploads, pushes, connector
+  actions that send, charge or delete, and in strict mode anything that reaches an address not
+  on your list. An action disguised as something else (a script that quietly sends email) gets
+  past it. It guards against an assistant that is confident and wrong, not one trying to hide
+  what it does.
+- **The journal and `.zipline/` are protected by the same reading of commands.** Direct writes,
+  redirects and any non-read-only command that names them are refused. A deliberately evasive
+  command could still reach them. The rule errs the other way too: a shell command that merely
+  mentions them in text (say, a script editing these docs) is refused, so edit such files with
+  the editor, which is judged by path.
+- **Prices, dates and promises inside a draft aren't detected.** They're caught when the draft
+  is sent, which is gated.
+- **A signature can't stop you from approving something you shouldn't.** It makes sure you were
+  shown the specifics first.
 
 ## 🔴 Don't attach your business files to a report
 

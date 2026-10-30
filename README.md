@@ -27,8 +27,11 @@ assistant drafts, and a few built-in habits keep the two of you from going in ci
 - **Stops going in circles.** It counts attempts. At the limit, or when you're repeating
   yourself, it stops, says back what it thinks the goal is, and asks the one question that
   would change the approach.
-- **Drafts, never sends.** Sending, prices, dates, deleting files, spending money and installing
-  software all wait for your OK.
+- **Drafts, never sends.** Sending, deleting your files, spending money and installing software
+  stop until you sign: the assistant shows you exactly what will happen, and you type a short
+  phrase like `email james` to let that one action run once. "Yes" doesn't count.
+- **Keeps a journal.** One plain line per thing that happened, in `journal/`, written by the
+  safeguards, not the assistant.
 - **Remembers what went wrong.** Lessons go in `lessons.md`, and the assistant reads them before
   similar work.
 

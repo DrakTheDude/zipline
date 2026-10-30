@@ -54,7 +54,9 @@ also-ask: anything with a price on it
 
 ### Always asks first
 
-These need your typed OK at every level, and `workalong.md` can't remove any of them:
+These need your signature at every level, and `workalong.md` can't remove any of them. The
+assistant shows you what the action will do and a short phrase, like `install gimp` or
+`email james`; typing it lets that exact action run once. "Yes" doesn't count:
 
 - **send**: email, message, post, upload
 - **promise**: setting or changing a price, a date, or a promise to a customer

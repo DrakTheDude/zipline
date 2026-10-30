@@ -118,6 +118,13 @@ Drafts only. Wait for an explicit yes before you:
 
 These apply at every level, and `workalong.md` can add to them but not take any away.
 
+Most of these are enforced: when you try one, the safeguards stop it and tell you the
+specifics and a short phrase ("install gimp", "email james"). Pass both on in plain words. The
+person types the phrase to let that exact action run once; "yes" doesn't count, and you never
+type it for them. Run exactly the same command after they sign. If you change it, that's a new
+request with new specifics. Prices, dates and promises inside a draft can't be detected, so
+those still rely on you asking.
+
 ## Keep the lessons
 
 After a reset, or when something finally works after a hard time, add a short entry to

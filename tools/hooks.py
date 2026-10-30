@@ -6,8 +6,10 @@ the assistant doesn't call it and can't skip it.
                                            of the assistant, so it doesn't have to remember
     python3 tools/hooks.py prompt          on each message the person types: notice when
                                            they're repeating themselves
-    python3 tools/hooks.py after-edit      after the assistant writes a file: count draft
-                                           versions against the attempt limit
+    python3 tools/hooks.py before-tool     before anything runs: stop actions that need the
+                                           person's signature (see tools/gates.py)
+    python3 tools/hooks.py after-edit      after anything runs: count draft versions against
+                                           the attempt limit, and journal signed actions
 
 Each reads Claude Code's event as JSON on stdin and writes what the assistant should know as
 JSON on stdout. Everything worth keeping goes in journal/YYYY-MM.md, which only this file
@@ -16,13 +18,18 @@ writes: the safeguards record what happened, the assistant doesn't get to.
 A safeguard must never break the session it's guarding: any error is reported to the
 assistant as text and the hook exits 0.
 """
-import difflib, json, os, pathlib, re, sys, time
+import difflib, hashlib, json, os, pathlib, re, sys, time
 
 ROOT = pathlib.Path(os.environ.get("CLAUDE_PROJECT_DIR") or pathlib.Path(__file__).resolve().parent.parent)
 STATE = ROOT / ".zipline" / "state.json"
 JOURNAL = ROOT / "journal"
 sys.path.insert(0, str(ROOT / "tools"))
 import settings as settings_mod  # noqa: E402
+import gates  # noqa: E402
+
+GRANTS = ROOT / ".zipline" / "grants.json"
+PENDING_TTL = 30 * 60   # a request waits this long for a signature
+GRANTED_TTL = 5 * 60    # a signature is good for one use within this window
 
 VERSION = re.compile(r"-v(\d+)\.[A-Za-z0-9]+$")
 # Words people use when the last answer missed. One on its own means little ("again" is
@@ -42,6 +49,13 @@ EVENTS = {  # an event name is an API: add, don't rename
     "in-place": "a draft version was overwritten instead of saved as a new one",
     "repeating": "the person may be repeating themselves",
     "problem": "a safeguard couldn't do its job",
+    "asked": "an action was stopped until the person signs for it",
+    "signed": "the person typed the signature",
+    "not-signed": "the person said yes, but not with the signature",
+    "used": "a signed action was allowed to run, once",
+    "done": "a signed action finished",
+    "expired": "a request or signature ran out of time unused",
+    "refused": "an action no signature can allow was stopped",
 }
 
 
@@ -108,6 +122,10 @@ def session_start(event):
                      "first draft, run `python3 tools/setup.py`.")
     if problems:
         lines.append("\nworkalong.md has problems, tell the person: " + "; ".join(problems))
+    lines.append("\nSome actions stop until the person signs: sending, installing, deleting or "
+                 "overwriting their files, spending, and anything the settings add. When one "
+                 "stops, you'll be told the specifics and the phrase; pass both on in plain "
+                 "words. A 'yes' isn't a signature. Never type the phrase yourself.")
     lines.append("\njournal/ is written by these safeguards. Don't write to it yourself.")
     say("SessionStart", "\n".join(lines))
     journal("session", (f"{event.get('source') or 'started'} · level {s['level'] or '-'} · "
@@ -115,7 +133,122 @@ def session_start(event):
                         f"{s['network']}" + ("" if found else " · no workalong.md, defaults")))
 
 
+# --- signatures: the person types "<verb> <target>" to let one specific action run once ------
+
+def load_grants():
+    try:
+        grants = json.loads(GRANTS.read_text())
+    except (OSError, ValueError):
+        grants = []
+    now, keep = time.time(), []
+    for g in grants:
+        ttl = PENDING_TTL if g["status"] == "pending" else GRANTED_TTL
+        start = g["created"] if g["status"] == "pending" else g.get("granted_at", 0)
+        if g["status"] in ("pending", "granted") and now - start > ttl:
+            journal("expired", f"{g['phrase']} ({g['status']}, unused)")
+            g["status"] = "expired"
+        if g["status"] in ("pending", "granted") or now - g["created"] < 24 * 3600:
+            keep.append(g)
+    return keep
+
+
+def save_grants(grants):
+    GRANTS.parent.mkdir(exist_ok=True)
+    GRANTS.write_text(json.dumps(grants, indent=1))
+
+
+def fingerprint(tool, tool_input):
+    """The exact action. A signature covers this and nothing else: if the command changes after
+    signing, the specifics changed, and it needs signing again."""
+    raw = json.dumps([tool, tool_input], sort_keys=True)
+    return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+
+def normalise(text):
+    text = re.sub(r"\s+", " ", str(text)).strip().strip("`'\"").strip()
+    return text.rstrip(".!").lower()
+
+
+YES = re.compile(r"^(y|yes|yep|yeah|ok|okay|sure|go|go ahead|do it|proceed|approved?|fine|"
+                 r"confirmed?|sign(ed)?|please do)\b", re.I)
+
+
+def before_tool(event):
+    tool, tool_input = event.get("tool_name", ""), event.get("tool_input") or {}
+    s = settings_mod.load()[0]
+    gate = gates.classify(tool, tool_input, s, ROOT)
+    if gate is None:
+        return
+    if gate.blocked:
+        journal("refused", f"{tool}: {gate.blocked[:80]}")
+        deny(f"zipline: not allowed, and no signature can allow it. {gate.blocked}")
+        return
+    fp = fingerprint(tool, tool_input)
+    grants = load_grants()
+    live = next((g for g in grants if g["fingerprint"] == fp and g["status"] == "granted"), None)
+    if live:
+        live["status"], live["used_at"] = "used", time.time()
+        save_grants(grants)
+        journal("used", live["phrase"])
+        state = load_state(event.get("session_id"))
+        state["running"] = {"fingerprint": fp, "phrase": live["phrase"]}
+        save_state(state)
+        return
+    if not any(g["fingerprint"] == fp and g["status"] == "pending" for g in grants):
+        grants.append({"phrase": gate.phrase, "details": gate.details, "fingerprint": fp,
+                       "tool": tool, "status": "pending", "created": time.time()})
+        save_grants(grants)
+        journal("asked", f"{gate.phrase} · " + "; ".join(gate.details))
+    deny("zipline: stopped. This needs the person's signature before it runs.\n"
+         f"Tell them plainly what it will do: " + "; ".join(gate.details) + ".\n"
+         f"Then tell them: to go ahead, type exactly: {gate.phrase}\n"
+         "Don't type it for them, and don't change the command to get around this. If they "
+         "sign, run exactly the same command again; a different command needs a new signature. "
+         "If they'd rather not, offer another way.")
+
+
+def deny(reason):
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
+                                             "permissionDecision": "deny",
+                                             "permissionDecisionReason": reason}}))
+
+
+def sign(event):
+    """If the message is a signature for a pending request, grant it. Returns True if this
+    message was about a signature, so it isn't also read as the person repeating themselves."""
+    typed = normalise(event.get("prompt", ""))
+    grants = load_grants()
+    pending = [g for g in grants if g["status"] == "pending"]
+    if not pending:
+        save_grants(grants)
+        if any(g["status"] == "expired" and g["phrase"] == typed for g in grants):
+            say("UserPromptSubmit", f"zipline: the person typed '{typed}', but that request "
+                "ran out of time unsigned, so it doesn't count. Tell them it expired; if they "
+                "still want it, try the action again and a fresh request will come up.")
+            return True
+        return False
+    match = next((g for g in reversed(pending) if g["phrase"] == typed), None)
+    if match:
+        match["status"], match["granted_at"] = "granted", time.time()
+        save_grants(grants)
+        journal("signed", f'"{match["phrase"]}"')
+        say("UserPromptSubmit", f"zipline: signed: {match['phrase']}. You may now run exactly "
+            "the action it covers, once, in the next 5 minutes. Then tell the person what "
+            "happened, and if it failed, show how.")
+        return True
+    save_grants(grants)
+    if YES.match(typed):
+        phrases = ", ".join(sorted({g["phrase"] for g in pending}))
+        journal("not-signed", f'"{typed[:40]}" while waiting for: {phrases}')
+        say("UserPromptSubmit", f"zipline: that isn't a signature. Waiting for the person to "
+            f"type exactly: {phrases}. Say so plainly; don't run the action.")
+        return True
+    return False
+
+
 def prompt(event):
+    if sign(event):
+        return
     text = str(event.get("prompt", ""))
     state = load_state(event.get("session_id"))
     reasons = []
@@ -142,6 +275,16 @@ def prompt(event):
 
 def after_edit(event):
     tool = event.get("tool_name", "")
+    state = load_state(event.get("session_id"))
+    running = state.get("running")
+    if running and running["fingerprint"] == fingerprint(tool, event.get("tool_input") or {}):
+        response = event.get("tool_response") or {}
+        failed = isinstance(response, dict) and (response.get("interrupted") or response.get("is_error"))
+        journal("done", f"{running['phrase']}" + (" · reported a failure" if failed else ""))
+        state.pop("running")
+        save_state(state)
+    if tool not in ("Write", "Edit", "MultiEdit"):
+        return
     path = (event.get("tool_input") or {}).get("file_path", "")
     if not path:
         return
@@ -183,7 +326,8 @@ def after_edit(event):
 
 def main(argv):
     event_name = argv[0] if argv else ""
-    handlers = {"session-start": session_start, "prompt": prompt, "after-edit": after_edit}
+    handlers = {"session-start": session_start, "prompt": prompt, "after-edit": after_edit,
+                "before-tool": before_tool}
     try:
         raw = sys.stdin.read()
         event = json.loads(raw) if raw.strip() else {}
@@ -198,7 +342,12 @@ def main(argv):
         # Tell the assistant too. A safeguard that fails quietly looks exactly like one that
         # checked and had nothing to say, and a claim was once fooled by that.
         hook_event = {"session-start": "SessionStart", "prompt": "UserPromptSubmit",
-                      "after-edit": "PostToolUse"}.get(event_name)
+                      "after-edit": "PostToolUse", "before-tool": "PreToolUse"}.get(event_name)
+        if event_name == "before-tool":
+            # Failing closed: if the gate can't decide, the action doesn't run.
+            deny(msg + ". The signature check couldn't run, so this action is stopped. Tell "
+                 "the person.")
+            return 0
         if hook_event:
             say(hook_event, msg + ". Tell the person: this safeguard didn't run, so don't "
                 "rely on it for this step.")

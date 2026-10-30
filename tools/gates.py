@@ -1,0 +1,313 @@
+#!/usr/bin/env python3
+"""Which actions need the person's signature, and what they'd be signing.
+
+classify(tool_name, tool_input, settings, root) returns None when an action is free to run,
+or a Gate: the verb and target the person types ("install gimp", "email james", "delete
+logo.svg"), and the specifics they're agreeing to.
+
+The rule for anything unclear is to ask. A signature that wasn't needed costs a few seconds;
+a send that should have been signed can't be taken back.
+
+What this can't see: it reads commands and tool names, so an action dressed up as something
+else (a script that sends email without saying so) gets past it. It guards against an
+assistant that's confident and wrong, not one that's trying to hide what it does.
+
+    python3 tools/gates.py '<shell command>'     show what a command would need, for testing
+"""
+import os, pathlib, re, shlex, sys, tempfile
+from dataclasses import dataclass, field
+
+
+@dataclass
+class Gate:
+    verb: str                      # what the person types first: install, email, delete...
+    target: str                    # what it acts on: gimp, james, logo.svg
+    details: list = field(default_factory=list)   # the specifics they're agreeing to
+    blocked: str = ""              # set when no signature can allow this at all
+
+    @property
+    def phrase(self):
+        return f"{self.verb} {self.target}"
+
+
+# Where package managers download from, so strict network mode can say where things go.
+SOURCES = {
+    "apt": ("Ubuntu/Debian archive", ["archive.ubuntu.com", "security.ubuntu.com"]),
+    "apt-get": ("Ubuntu/Debian archive", ["archive.ubuntu.com", "security.ubuntu.com"]),
+    "snap": ("the Snap Store", ["api.snapcraft.io"]),
+    "flatpak": ("Flathub", ["dl.flathub.org"]),
+    "dnf": ("Fedora mirrors", ["mirrors.fedoraproject.org"]),
+    "yum": ("RHEL/CentOS mirrors", ["mirrorlist.centos.org"]),
+    "brew": ("Homebrew", ["formulae.brew.sh", "ghcr.io"]),
+    "winget": ("the winget catalogue", ["cdn.winget.microsoft.com"]),
+    "choco": ("the Chocolatey catalogue", ["community.chocolatey.org"]),
+    "pip": ("PyPI", ["pypi.org", "files.pythonhosted.org"]),
+    "pip3": ("PyPI", ["pypi.org", "files.pythonhosted.org"]),
+    "pipx": ("PyPI", ["pypi.org", "files.pythonhosted.org"]),
+    "npm": ("the npm registry", ["registry.npmjs.org"]),
+    "gem": ("RubyGems", ["rubygems.org"]),
+    "cargo": ("crates.io", ["crates.io"]),
+}
+INSTALL_WORDS = {"install", "add"}
+REMOVE_WORDS = {"remove", "purge", "uninstall", "erase", "autoremove"}
+NETWORK_TOOLS = {"curl", "wget", "ssh", "scp", "rsync", "sftp", "ftp", "nc", "ncat", "telnet",
+                 "git", "docker", "podman"} | set(SOURCES)
+GIT_NETWORK = {"clone", "fetch", "pull", "push", "ls-remote", "submodule"}
+# Package-manager subcommands that reach the network. "snap list" or "pip show" don't, and
+# asking for a signature to look at what's installed teaches people to sign without reading.
+PKG_NETWORK = {"install", "add", "update", "upgrade", "refresh", "download", "search", "info",
+               "find", "fetch", "sync", "outdated", "pull"}
+DELETE_TOOLS = {"rm", "rmdir", "shred", "unlink", "truncate"}
+MAIL_TOOLS = {"sendmail", "mail", "mailx", "mutt", "swaks"}
+# Folders where the assistant's own work lives: deleting or overwriting there is free.
+SCRATCH = ("drafts", "previews")
+# The person's own things: overwriting these needs their signature.
+OWNER = ("brand", "ready", "workalong.md", "lessons.md")
+# The safeguards' own record. Nothing the assistant does may touch these, signed or not.
+SEALED = (".zipline", "journal")
+
+MCP_SEND = re.compile(r"send|post|publish|reply|forward|share|upload|create_(message|post|draft_and_send)|message", re.I)
+MCP_SPEND = re.compile(r"pay|charge|refund|purchase|invoice|payment|checkout|subscribe|order", re.I)
+MCP_DELETE = re.compile(r"delete|remove|trash|archive|destroy|cancel", re.I)
+MCP_READ = re.compile(r"^(get|list|search|read|find|query|fetch|describe|lookup)", re.I)
+
+
+def short(text, n=40):
+    text = re.sub(r"[^\w.@+-]+", "-", str(text).strip().lower()).strip("-")
+    return text[:n] or "it"
+
+
+def segments(command):
+    """Split a shell command into simple commands. Imperfect by design: when in doubt the
+    caller asks, rather than guessing a command is harmless."""
+    for part in re.split(r"\|\||&&|;|\||\n|`|\$\(", command):
+        try:
+            words = shlex.split(part, comments=True)
+        except ValueError:
+            words = part.split()
+        while words and (words[0] in ("sudo", "doas", "env", "nohup", "time", "exec", "command")
+                         or re.match(r"^\w+=", words[0]) or (words[0].startswith("-") and words[0] != "-")):
+            words = words[1:]
+        if words:
+            yield words
+
+
+def hosts_in(words):
+    found = []
+    for w in words:
+        if m := re.match(r"^[a-z][a-z0-9+.-]*://([^/:@\s]+@)?([^/:\s]+)", w, re.I):
+            found.append(m.group(2).lower())
+        elif m := re.match(r"^([\w.-]+@)?([\w-]+(\.[\w-]+)+):", w):
+            found.append(m.group(2).lower())
+    return found
+
+
+def allowed(host, allow):
+    return any(host == a or host.endswith("." + a) for a in allow)
+
+
+def inside(path, root, *names):
+    try:
+        rel = pathlib.Path(path).expanduser().resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return bool(rel.parts) and rel.parts[0] in names
+
+
+def in_project(path, root):
+    try:
+        pathlib.Path(path).expanduser().resolve().relative_to(root.resolve())
+        return True
+    except ValueError:
+        return False
+
+
+READ_ONLY = {"cat", "head", "tail", "less", "more", "grep", "egrep", "zgrep", "ls", "wc",
+             "diff", "stat", "file", "cut", "sort", "uniq", "jq"}
+
+
+def mentions_sealed(text):
+    return any(re.search(rf"(^|[\s/'\"=]){re.escape(x)}(/|\s|$|['\"*])", text) for x in SEALED)
+
+
+def touches_sealed(command):
+    """True when a command could change the safeguards' record. Looking is fine: the owner may
+    well ask what's in the journal. The first version blocked any mention at all, and stopped a
+    plain `tail journal/*.md`."""
+    if not mentions_sealed(command):
+        return False
+    if re.search(r">>?\s*\S*(" + "|".join(re.escape(x) for x in SEALED) + ")", command):
+        return True  # writing into it with a redirect
+    for part in re.split(r"\|\||&&|;|\||\n|`|\$\(", command):
+        if not mentions_sealed(part):
+            continue
+        try:
+            words = shlex.split(part)
+        except ValueError:
+            return True
+        while words and (words[0] in ("sudo", "env") or re.match(r"^\w+=", words[0])):
+            words = words[1:]
+        if not words or pathlib.Path(words[0]).name not in READ_ONLY:
+            return True
+        if words[0] in ("sort",) and "-o" in words:
+            return True
+    return False
+
+
+def classify_bash(command, s, root):
+    strict = s["network"] == "strict"
+    allow = s["allow"]
+    if touches_sealed(command):
+        return Gate("change", "safeguards", blocked=f"{' and '.join(SEALED)} are the safeguards' "
+                    "own record. Nothing the assistant runs may change them, signed or not. "
+                    "Reading them with cat, tail, grep or ls is fine.")
+    gates = []
+    for words in segments(command):
+        tool = pathlib.Path(words[0]).name
+        args = [w for w in words[1:] if not w.startswith("-")]
+        if tool == "python3" and "tools/setup.py" in " ".join(words) and "--install" in words:
+            gates.append(Gate("install", "setup", ["the tools tools/setup.py listed as missing",
+                                                   "runs with sudo where the installer needs it"]))
+            continue
+        if tool in SOURCES and args and args[0] in INSTALL_WORDS | REMOVE_WORDS:
+            removing = args[0] in REMOVE_WORDS
+            packages = [a for a in args[1:] if not a.startswith("-")]
+            name, hosts = SOURCES[tool]
+            details = [f"from {name} ({tool})" if not removing else f"using {tool}"]
+            if "sudo" in command.split():
+                details.append("runs with sudo (administrator rights)")
+            if tool == "snap" and not removing:
+                details.append("snaps update themselves in the background")
+            if strict and not removing:
+                outside = [h for h in hosts if not allowed(h, allow)]
+                if outside:
+                    details.append(f"downloads from {', '.join(outside)}, which isn't on your "
+                                   "allowed list")
+            gates.append(Gate("uninstall" if removing else "install",
+                              short(packages[0] if packages else tool), details))
+            continue
+        if tool in DELETE_TOOLS or tool == "mv" or (tool == "git" and args[:1] == ["clean"]) \
+                or (tool == "git" and args[:2] == ["reset", "--hard"]) \
+                or (tool == "find" and "-delete" in words):
+            targets = args if tool in DELETE_TOOLS else args[:-1] if tool == "mv" else args
+            # Free only in the assistant's own scratch space: drafts/ and previews/ here, or the
+            # system's temp folder when that isn't where this project lives. (The first version
+            # exempted anything under /tmp/, and a project kept in /tmp lost its logo for free.)
+            if tool in DELETE_TOOLS and targets and all(
+                    inside(t, root, *SCRATCH) or (not in_project(t, root)
+                                                  and t.startswith(("/tmp/", "$TMPDIR")))
+                    for t in targets):
+                continue
+            if tool == "mv" and args and inside(args[-1], root, "ready"):
+                gates.append(Gate("approve", short(pathlib.Path(targets[0]).name if targets else "it"),
+                                  [f"moves {' '.join(targets)} into ready/, which means you've "
+                                   "approved it to go out"]))
+                continue
+            verb = "move" if tool == "mv" else "delete"
+            gates.append(Gate(verb, short(pathlib.Path(targets[0]).name if targets else tool),
+                              [f"{verb}s: {' '.join(targets) or 'see the command'}",
+                               "can't be undone from here" if verb == "delete" else
+                               "the original location will be empty"]))
+            continue
+        if tool in MAIL_TOOLS or "smtplib" in command:
+            to = next((a for a in args if "@" in a), "")
+            gates.append(Gate("email", short(to.split("@")[0] if to else "someone"),
+                              [f"sends an email{' to ' + to if to else ''} from this computer"]))
+            continue
+        if tool == "git" and args[:1] == ["push"]:
+            gates.append(Gate("push", short(args[1] if len(args) > 1 else "origin"),
+                              ["publishes commits to a remote repository"]))
+            continue
+        if tool == "curl" and re.search(r"(^|\s)(-X\s*(POST|PUT|PATCH|DELETE)|-d|--data\S*|-F|--form|-T|--upload-file)(\s|=|$)", " ".join(words)):
+            host = (hosts_in(words) or ["a server"])[0]
+            gates.append(Gate("send", short(host), [f"uploads or sends data to {host}"]))
+            continue
+        if tool in ("scp", "rsync", "sftp") and hosts_in(words[-1:]):
+            host = hosts_in(words[-1:])[0]
+            gates.append(Gate("upload", short(host), [f"copies files to {host}"]))
+            continue
+        if strict and tool in NETWORK_TOOLS:
+            if tool == "git" and not set(args[:1]) & GIT_NETWORK:
+                continue
+            if tool in SOURCES and not set(args[:1]) & PKG_NETWORK:
+                continue
+            found = hosts_in(words) or (SOURCES[tool][1] if tool in SOURCES else [])
+            outside = [h for h in found if not allowed(h, allow)]
+            if outside or not found:
+                where = ", ".join(outside) if outside else "an address this check can't read"
+                gates.append(Gate("connect", short(outside[0] if outside else tool),
+                                  [f"reaches {where}, which isn't on your allowed list"]))
+    if not gates:
+        return None
+    first = gates[0]
+    for extra in gates[1:]:
+        first.details.append(f"also: {extra.phrase} ({'; '.join(extra.details)})")
+    return first
+
+
+def classify(tool_name, tool_input, s, root):
+    root = pathlib.Path(root)
+    tool_input = tool_input or {}
+    if tool_name == "Bash":
+        return classify_bash(str(tool_input.get("command", "")), s, root)
+    if tool_name in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
+        path = str(tool_input.get("file_path") or tool_input.get("notebook_path") or "")
+        if not path:
+            return None
+        name = short(pathlib.Path(path).name)
+        if in_project(path, root) and inside(path, root, *SEALED):
+            return Gate("change", "safeguards", blocked="journal/ and .zipline/ are the "
+                        "safeguards' own record. Nothing the assistant writes may change them.")
+        if inside(path, root, "ready"):
+            return Gate("approve", name, [f"puts {pathlib.Path(path).name} in ready/, which "
+                                          "means you've approved it to go out"])
+        exists = pathlib.Path(path).expanduser().exists()
+        if exists and inside(path, root, *OWNER):
+            return Gate("overwrite", name, [f"changes your {path}", "the current version "
+                                            "is replaced"])
+        if not in_project(path, root) and str(pathlib.Path(path).expanduser()).startswith(
+                (tempfile.gettempdir() + os.sep, "/tmp/")):
+            return None  # the system's temp folder is scratch space, the same as for rm
+        if not in_project(path, root):
+            return Gate("overwrite" if exists else "write", name,
+                        [f"{'changes' if exists else 'creates'} {path}, outside this folder"])
+        return None
+    if tool_name == "WebFetch" and s["network"] == "strict":
+        host = (hosts_in([str(tool_input.get("url", ""))]) or ["a website"])[0]
+        if not allowed(host, s["allow"]):
+            return Gate("connect", short(host), [f"fetches a page from {host}, which isn't on "
+                                                 "your allowed list"])
+    if tool_name == "WebSearch" and s["network"] == "strict":
+        return Gate("connect", "web-search", ["sends a search to a web search service"])
+    if tool_name.startswith("mcp__"):
+        action = tool_name.split("__")[-1]
+        if MCP_READ.match(action):
+            return None
+        who = next((str(tool_input[k]) for k in ("to", "recipient", "recipients", "email",
+                    "channel", "customer", "customer_email", "user") if tool_input.get(k)), "")
+        who = who.split(",")[0].split("@")[0].strip("[]'\" ") if who else action
+        service = tool_name.split("__")[1] if tool_name.count("__") >= 2 else "a connected service"
+        if MCP_SPEND.search(action):
+            return Gate("charge", short(who), [f"{action} through {service}", "involves money"])
+        if MCP_SEND.search(action):
+            verb = "email" if re.search(r"mail|gmail|outlook", tool_name, re.I) else "send"
+            return Gate(verb, short(who), [f"{action} through {service}",
+                                           f"to {who}" if who != action else "see the request"])
+        if MCP_DELETE.search(action):
+            return Gate("delete", short(who), [f"{action} through {service}"])
+    return None
+
+
+if __name__ == "__main__":
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    import settings as settings_mod
+    s = settings_mod.load()[0]
+    g = classify("Bash", {"command": " ".join(sys.argv[1:])}, s, settings_mod.ROOT)
+    if g is None:
+        print("free to run")
+    elif g.blocked:
+        print(f"blocked: {g.blocked}")
+    else:
+        print(f"needs a signature: {g.phrase}")
+        for d in g.details:
+            print(f"  - {d}")
