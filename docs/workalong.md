@@ -49,7 +49,7 @@ also-ask: anything with a price on it
 | level | in plain words | attempts | how the assistant works |
 |---|---|---|---|
 | `new` | You're new to this, or it's been great so far | 2 | Agrees the check with you every time and explains each step. People here don't notice the twentieth version until it's too late, so it stops early. |
-| `burned` | It's been confidently wrong on you, maybe you stopped using it for something | 2 | Shows you the check result before the draft. Short replies. Trust comes back one checked result at a time. |
+| `burned` | It's been confidently wrong on you, maybe you stopped using it for something | 2 | Shows you the check result before the draft. Trust comes back one checked result at a time. |
 | `pattern` | You know the pattern: check first, try, look, decide | 4 | Proposes checks itself and gets on with it. |
 
 ### Always asks first

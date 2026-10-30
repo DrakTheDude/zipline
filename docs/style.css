@@ -1,0 +1,103 @@
+/* System fonts only: the page loads nothing from other sites. */
+:root {
+  --ink: #2b2118;
+  --muted: #6b5d50;
+  --paper: #fbf8f3;
+  --card: #ffffff;
+  --line: #e4dccf;
+  --accent: #b5651d;
+  --accent-ink: #ffffff;
+  --warn: #9a3412;
+  --warn-bg: #fff1e6;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.55;
+}
+
+body { margin: 0; }
+main { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; }
+
+header h1 { font-size: 2.6rem; margin: 0; letter-spacing: -0.02em; }
+.tagline { font-size: 1.2rem; color: var(--muted); margin: 4px 0 24px; }
+h2 { margin-top: 48px; }
+
+.curve svg { width: 100%; height: auto; display: block; }
+.curve .axis { stroke: var(--line); stroke-width: 2; }
+.curve .path { fill: none; stroke: var(--muted); stroke-width: 3; }
+.curve .zip { stroke: var(--accent); stroke-width: 3; stroke-dasharray: 8 6; }
+.curve .dot { fill: var(--accent); }
+.curve .dot.low { fill: var(--muted); }
+.curve text { font-size: 14px; fill: var(--ink); }
+.curve text.low { fill: var(--muted); }
+.curve text.ziplabel { fill: var(--accent); font-weight: 600; }
+/* The drawing scales down on a phone and its labels would shrink to ~8px. Measured, not guessed:
+   at 390px wide the viewBox is drawn at ~0.55x, so 24 units comes out near 13px. */
+@media (max-width: 560px) {
+  .curve text { font-size: 24px; }
+}
+
+.notice {
+  border-left: 4px solid var(--accent);
+  background: var(--card);
+  padding: 10px 14px;
+}
+
+fieldset {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  margin: 0 0 20px;
+  padding: 16px 20px 20px;
+}
+legend { font-weight: 700; padding: 0 6px; }
+.q { font-weight: 600; margin: 18px 0 6px; }
+.hint { color: var(--muted); font-size: 0.95rem; margin: 6px 0; }
+.choices { display: flex; flex-direction: column; gap: 6px; }
+.choices label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+.choices input { margin-top: 0.3em; }
+
+label[for] { display: block; font-weight: 600; margin: 14px 0 6px; }
+input[type="text"], textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+.warn { color: var(--warn); background: var(--warn-bg); padding: 8px 10px; border-radius: 6px; }
+
+#result {
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 16px 20px;
+}
+#result h3 { margin-top: 0; }
+#preview {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+}
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: var(--card);
+  color: var(--accent);
+  cursor: pointer;
+}
+#download { background: var(--accent); color: var(--accent-ink); }
+.examples button { margin: 4px 4px 0 0; }
+.actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+footer { margin-top: 48px; color: var(--muted); font-size: 0.9rem; }

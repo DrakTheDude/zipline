@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>zipline: set up how you work with the assistant</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+
+<header>
+  <h1>zipline</h1>
+  <p class="tagline">From "this is amazing" to "this actually works", without the crash in between.</p>
+</header>
+
+<section class="curve" aria-label="The usual path, and the zipline across it">
+  <svg viewBox="0 0 640 230" role="img" aria-labelledby="curve-title">
+    <title id="curve-title">Most people climb to excitement, crash into disappointment, then
+      slowly climb to steady results. The zipline goes straight from the excitement to the
+      steady results.</title>
+    <line x1="30" y1="200" x2="620" y2="200" class="axis"/>
+    <path d="M30 192 C 90 190, 110 40, 150 34 S 200 150, 250 168 S 330 150, 400 112 S 520 92, 620 90"
+          class="path"/>
+    <line x1="150" y1="34" x2="470" y2="96" class="zip"/>
+    <circle cx="150" cy="34" r="5" class="dot"/>
+    <circle cx="250" cy="168" r="5" class="dot low"/>
+    <circle cx="470" cy="96" r="5" class="dot"/>
+    <text x="150" y="20" text-anchor="middle">"This is amazing"</text>
+    <text x="250" y="190" text-anchor="middle" class="low">"This is useless"</text>
+    <text x="632" y="76" text-anchor="end">"This actually works"</text>
+    <text x="318" y="52" text-anchor="middle" class="ziplabel">zipline</text>
+  </svg>
+  <p>Most people who start working with an assistant hit the same curve. It's exciting, then it
+    confidently gets something wrong, goes round in circles on the twentieth version of an
+    email, or can't make what they had in mind. Many give up there. zipline is a set of working
+    habits for Claude Code that takes you straight across: you steer, the assistant drafts, and
+    built-in checks stop the two of you going in circles.</p>
+  <p class="notice"><strong>This is not an image generator.</strong> It won't make AI art.
+    Graphics are built the way a designer builds them, from real fonts, layouts and shapes, like
+    the curve above.</p>
+</section>
+
+<section>
+  <h2>Set it up for your business</h2>
+  <p>Answer a few questions and this page writes a file called <code>workalong.md</code>. Put
+    it in the top folder of your zipline copy and the assistant works the way it says.
+    <strong>Your answers never leave this page.</strong> Nothing is sent anywhere; the file is
+    made right here in your browser.</p>
+  <p class="examples">Or start from an example:
+    <button type="button" data-example="bakery">a bakery</button>
+    <button type="button" data-example="fleet">an IT person with a fleet of computers</button>
+  </p>
+
+  <form id="form" autocomplete="off">
+    <fieldset>
+      <legend>Your business</legend>
+      <label for="business">What's the business, in a line?</label>
+      <input id="business" name="business" type="text" maxlength="200"
+             placeholder="e.g. a neighbourhood bakery">
+    </fieldset>
+
+    <fieldset>
+      <legend>What's happened so far</legend>
+      <p class="hint">These ask what has happened, not how good you are with assistants. Almost
+        everyone rates themselves highly, so that question tells us nothing.</p>
+
+      <p class="q">Has one been confidently wrong in a way that cost you time or money?</p>
+      <div class="choices">
+        <label><input type="radio" name="wrong" value="no"> No</label>
+        <label><input type="radio" name="wrong" value="once"> Yes, at least once</label>
+        <label><input type="radio" name="wrong" value="stopped"> Yes, and I stopped using it for that</label>
+      </div>
+
+      <p class="q">Is there a job it now does for you regularly that you trust?</p>
+      <div class="choices">
+        <label><input type="radio" name="trusted" value="no"> No</label>
+        <label><input type="radio" name="trusted" value="yes"> Yes</label>
+      </div>
+
+      <p class="q">Have you typed a command into a terminal?</p>
+      <div class="choices">
+        <label><input type="radio" name="terminal" value="no"> No</label>
+        <label><input type="radio" name="terminal" value="help"> With instructions in front of me</label>
+        <label><input type="radio" name="terminal" value="yes"> Yes, I'm comfortable there</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Your setup</legend>
+      <p class="q">Who will use this?</p>
+      <div class="choices">
+        <label><input type="radio" name="users" value="just-me"> Just me</label>
+        <label><input type="radio" name="users" value="staff"> Me and my staff</label>
+      </div>
+
+      <p class="q">What kind of computer is it running on?</p>
+      <div class="choices">
+        <label><input type="radio" name="computer" value="home"> My own computer</label>
+        <label><input type="radio" name="computer" value="office"> A shared office computer</label>
+        <label><input type="radio" name="computer" value="managed"> One that's company-managed, or I look after other people's computers</label>
+      </div>
+      <div id="allow-box" hidden>
+        <label for="allow">Addresses it may reach without asking (optional, separated by commas)</label>
+        <input id="allow" name="allow" type="text" placeholder="e.g. archive.ubuntu.com, github.com">
+        <p class="hint">On a managed computer, anything that goes out over the network needs your
+          OK unless it's on this list.</p>
+      </div>
+
+      <p class="q">What will the assistant be able to get at?</p>
+      <div class="choices">
+        <label><input type="checkbox" name="reaches" value="email"> Your email</label>
+        <label><input type="checkbox" name="reaches" value="calendar"> Your calendar</label>
+        <label><input type="checkbox" name="reaches" value="accounts"> Accounts or banking</label>
+        <label><input type="checkbox" name="reaches" value="files"> Files on this computer</label>
+        <label><input type="checkbox" name="reaches" value="shell"> Running commands on this computer</label>
+        <label><input type="checkbox" name="reaches" value="remote-machines"> Other computers you manage</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>What needs your OK</legend>
+      <p class="hint">These always need you to type a short sign-off first, at every level:
+        <strong>sending</strong> anything, <strong>prices, dates and promises</strong> to
+        customers, <strong>deleting</strong> your files, <strong>spending</strong> money, and
+        <strong>installing</strong> software. You can add to this list, not take away.</p>
+      <label for="alsoAsk">Anything else? (optional, separated by commas)</label>
+      <input id="alsoAsk" name="alsoAsk" type="text" placeholder="e.g. anything with a price on it">
+      <p id="warn" class="warn" hidden></p>
+
+      <label for="rules">Your house rules, in your own words (optional)</label>
+      <textarea id="rules" name="rules" rows="5"
+                placeholder="- Prices come from the price list, never from memory.&#10;- Every customer email gets a test send to me first."></textarea>
+    </fieldset>
+  </form>
+
+  <div id="result">
+    <h3>Where you are: <span id="level-name">answer the questions above</span></h3>
+    <p id="level-says"></p>
+    <pre id="preview" aria-label="Your workalong.md"></pre>
+    <p class="actions">
+      <button type="button" id="download">Download workalong.md</button>
+      <button type="button" id="copy">Copy</button>
+      <span id="copied" hidden>Copied.</span>
+    </p>
+  </div>
+</section>
+
+<section>
+  <h2>Then</h2>
+  <ol>
+    <li>Get <a href="https://claude.com/claude-code">Claude Code</a> (it comes with a Claude
+      subscription, or use your own API key).</li>
+    <li>Download zipline from <a href="https://github.com/DrakTheDude/zipline">GitHub</a>.</li>
+    <li>Put <code>workalong.md</code> in its top folder, open the folder in Claude Code, and
+      say what you want to get done.</li>
+  </ol>
+</section>
+
+<footer>
+  <p>zipline is open source (Apache-2.0). This page loads nothing from anywhere else.</p>
+</footer>
+
+</main>
+<script src="form.js"></script>
+<script>
+(function () {
+  const form = document.getElementById("form");
+  const EXAMPLES = {
+    bakery: { business: "Rise & Crumb, a neighbourhood bakery", wrong: "no",
+      trusted: "no", terminal: "no", users: "just-me", computer: "home",
+      reaches: ["email", "files"], alsoAsk: "anything with a price on it",
+      rules: "- Prices come from the price list in brand/, never from memory.\n- Every customer email gets a test send to me first." },
+    fleet: { business: "IT for a small company: Windows and Ubuntu machines", wrong: "stopped", trusted: "yes", terminal: "yes", users: "staff", computer: "managed",
+      allow: "archive.ubuntu.com, github.com", reaches: ["files", "shell", "remote-machines"],
+      alsoAsk: "anything that runs on more than one machine",
+      rules: "- Nothing reaches the fleet untested: each script runs in a fresh VM per OS first.\n- Write the check before the script." },
+  };
+
+  function answers() {
+    const d = new FormData(form);
+    return { business: d.get("business"), wrong: d.get("wrong"),
+      trusted: d.get("trusted"), terminal: d.get("terminal"), users: d.get("users"),
+      computer: d.get("computer"), allow: d.get("allow"), reaches: d.getAll("reaches"),
+      alsoAsk: d.get("alsoAsk"), rules: d.get("rules") };
+  }
+
+  function fill(a) {
+    form.reset();
+    for (const [k, v] of Object.entries(a)) {
+      for (const el of form.elements[k] instanceof RadioNodeList ? form.elements[k] : [form.elements[k]]) {
+        if (!el) continue;
+        if (el.type === "radio" || el.type === "checkbox") el.checked = [].concat(v).includes(el.value);
+        else el.value = v;
+      }
+    }
+    update();
+  }
+
+  function update() {
+    const a = answers();
+    // textContent everywhere: what someone types is shown as text, never run as HTML.
+    document.getElementById("preview").textContent = build(a);
+    const level = levelFrom(a);
+    document.getElementById("level-name").textContent =
+      level ? LEVELS[level].name : "answer the questions above";
+    document.getElementById("level-says").textContent = level ? LEVELS[level].says : "";
+    document.getElementById("allow-box").hidden = a.computer !== "managed";
+    const warn = problems(a);
+    const w = document.getElementById("warn");
+    w.hidden = !warn.length;
+    w.textContent = warn.join(" ");
+  }
+
+  form.addEventListener("input", update);
+  form.addEventListener("change", update);
+  document.querySelectorAll("[data-example]").forEach((b) =>
+    b.addEventListener("click", () => fill(EXAMPLES[b.dataset.example])));
+
+  document.getElementById("download").addEventListener("click", () => {
+    const blob = new Blob([build(answers())], { type: "text/markdown" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "workalong.md";
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
+  document.getElementById("copy").addEventListener("click", async () => {
+    await navigator.clipboard.writeText(build(answers()));
+    const c = document.getElementById("copied");
+    c.hidden = false;
+    setTimeout(() => (c.hidden = true), 2000);
+  });
+
+  // #example=bakery opens the page with an example filled in.
+  const m = location.hash.match(/example=(\w+)/);
+  if (m && EXAMPLES[m[1]]) fill(EXAMPLES[m[1]]); else update();
+})();
+</script>
+</body>
+</html>
