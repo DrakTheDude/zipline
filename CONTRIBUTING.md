@@ -1,7 +1,7 @@
 # Contributing
 
-zipline has been tested on **one Ubuntu machine, with a handful of made-up businesses and a
-few real sessions**. That's the honest limit of it, and it's the thing you can most easily help with.
+zipline has been tested on **one Ubuntu machine, with a handful of made-up businesses,
+throwaway repositories and a few real sessions**. That's the honest limit of it, and it's the thing you can most easily help with.
 
 ## The most useful things you can send
 
@@ -50,12 +50,13 @@ python3 tools/check_claims_can_fail.py     and every one of them can still go re
 
 ## House rules, and why
 
-**Nothing about a real business enters history.** No customer names, prices, email addresses,
-logos or documents, in code, tests, examples or commit messages. The folders that hold a
+**Nothing real enters history.** No customer names, prices, email addresses, logos or
+documents, and no employer's code, hostnames, machine lists or keys, in code, tests, examples
+or commit messages. Profiles and examples are written from scratch. The folders that hold a
 business's own work (`brand/`, `drafts/`, `ready/`, `previews/`, `journal/`, `lessons.md`,
-`workalong.md`) are gitignored for this reason. Don't un-ignore them, and use made-up businesses in examples.
+`workalong.md`) are gitignored for this reason. Don't un-ignore them, and use made-up businesses and machines in examples.
 
-**A rule earns its place with an incident.** The bar for adding to `CLAUDE.md` is not "this
+**A rule earns its place with an incident.** The bar for adding to `CLAUDE.md` or a profile is not "this
 seems sensible". It's "this went wrong, and nobody noticed until later." Say what happened in
 the pull request. Rules added because they sound good are how instruction files bloat until
 nobody follows any of them.

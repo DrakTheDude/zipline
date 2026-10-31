@@ -10,8 +10,10 @@ neither does the assistant. The switches are in `.claude/settings.json`.
 
 ## When a session starts
 
-The assistant is handed your settings from `workalong.md` and your house rules, before it
-does anything else. Without that file, the defaults apply and it's told so.
+The assistant is handed, before it does anything else: your settings from `workalong.md`,
+the working rules for your kind of work (`profiles/<profile>.md`), who reviews the work and
+what that means for main, and last your house rules, because they win. Without
+`workalong.md`, the defaults apply and it's told so.
 
 This exists because of a real session: with a `workalong.md` that allowed downloads from
 only two addresses, the assistant was asked to install an image editor, never opened the
@@ -101,7 +103,11 @@ of every session and is told to follow them, but they're instructions, not locks
 
 ## Counting attempts
 
-Every new version of a draft is a new file, `drafts/<job>/<name>-v1.html`, `-v2`, and so on.
+**This one is automatic only for the `business` profile.** In code and infrastructure, an
+attempt is another fix to the same failing test or another run of the same script on the same
+target; no file shows that, so the assistant counts them itself, following the profile's rules.
+
+For business, every new version of a draft is a new file, `drafts/<job>/<name>-v1.html`, `-v2`, and so on.
 After each one is saved, the assistant is told which attempt it was out of your limit (from
 `level` or `attempts`, otherwise 3). On the last one it's told this is the limit; past it,
 that it has gone over, and it goes in the journal.
@@ -149,7 +155,7 @@ safeguards write it. The assistant can read it to you but can't change it.
 | `problem` | a safeguard itself failed |
 
 Ask the assistant "what's in the journal this week?" or open the file yourself. It stays on
-your computer and out of git, like the rest of your business's files.
+your computer and out of git, like `workalong.md` and `lessons.md`.
 
 ## If a safeguard breaks
 

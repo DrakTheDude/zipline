@@ -1,5 +1,7 @@
 # Third-party notices
 
+Copyright 2026 Petr Draxler.
+
 zipline is licensed Apache-2.0, see [LICENSE](LICENSE). That file is kept as the bare licence
 text so automated tooling can identify it. Attribution lives here.
 
@@ -12,9 +14,10 @@ unchanged.
 
 ## Linked, not redistributed
 
-- **[Small Business plugin](https://github.com/anthropics/knowledge-work-plugins/tree/main/small-business)**
-  by Anthropic, Apache-2.0. `.claude/settings.json` points Claude Code at it; the plugin is
-  fetched from its own repository and is not included here.
+- **[knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins)** by
+  Anthropic, Apache-2.0: small-business, engineering and operations. `.claude/settings.json`
+  registers the marketplace and `tools/setup.py` turns on the ones a profile lists; Claude Code
+  fetches them from their own repository. None is included here.
 
 ## Used on your computer, installed by you
 

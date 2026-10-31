@@ -1,6 +1,7 @@
-# workalong.md: how this business works with the assistant
+# workalong.md: how you work with the assistant here
 
-`workalong.md` sits in the top folder of your zipline copy. The form on the zipline page
+`workalong.md` sits in the top folder of your zipline copy, or of the repository you added
+zipline to. The form on the zipline page
 writes it for you; you can also write or edit it by hand. It has two parts:
 
 1. **Settings** between the `---` lines at the top. The tools read these.

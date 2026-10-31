@@ -1,13 +1,15 @@
 # Security and privacy reporting
 
-zipline runs on a business owner's own computer, next to their customer lists, prices and
-documents, and its whole promise is that **the assistant drafts and the person decides**. So
-two kinds of defect are the most serious this project can have:
+zipline runs next to whatever matters most to the people using it: a business's customer
+lists and prices, a team's code, the scripts that change a fleet of machines. Its whole promise
+is that **the assistant prepares and the person decides**. So two kinds of defect are the most
+serious this project can have:
 
-1. **Business data leaving the computer** when nobody asked it to.
+1. **Data leaving the computer** when nobody asked it to: a business's files, a repository's
+   code or secrets.
 2. **An ask-first rule that can be talked past.** If the assistant sends, deletes, spends,
-   installs or sets a price without the person's OK, that's a security bug here, not a
-   behaviour quirk.
+   installs, publishes, sets a price, or gets work onto main past the git rules without the
+   person's OK, that's a security bug here, not a behaviour quirk.
 
 ## How to report
 
@@ -22,8 +24,8 @@ realistic. If it's affecting real businesses right now, say so in the subject li
 
 ## In scope
 
-- Anything in this repository that sends a business's files, drafts or customer details
-  anywhere, on any path
+- Anything in this repository that sends a business's files, drafts or customer details, or a
+  repository's code or secrets, anywhere, on any path
 - The gitignore failing to keep `brand/`, `drafts/`, `ready/`, `previews/`, `journal/`,
   `lessons.md` or `workalong.md` out of a commit
 - A way to get the assistant past the ask-first list in `CLAUDE.md` (sending, prices and
@@ -39,7 +41,8 @@ realistic. If it's affecting real businesses right now, say so in the subject li
 ## Out of scope
 
 - **Claude Code and the model itself.** Report those to Anthropic.
-- **The Small Business plugin.** It's linked, not part of this repository. Report to
+- **The plugins** (small-business, engineering, operations). They're linked, not part of this
+  repository. Report to
   [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins).
 - **Things the person approved.** If they said yes to sending it, it was sent on purpose.
 
@@ -78,8 +81,8 @@ Be clear about this before trusting it with anything sensitive:
   of system message in a future version would need adding. Gated actions inside a subagent are
   stopped the same as in the main session (tested).
 
-## 🔴 Don't attach your business files to a report
+## 🔴 Don't attach your real files to a report
 
-The natural thing to send with a bug is the draft that triggered it. If it holds real names,
-prices or customer details, describe its shape instead, or replace the real values with
+The natural thing to send with a bug is the draft or script that triggered it. If it holds
+real names, prices, customer details, hostnames or keys, describe its shape instead, or replace the real values with
 `[customer]`, `[price]` and so on before you attach it.

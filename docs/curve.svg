@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 230" width="640" height="230" role="img" aria-labelledby="t">
+  <title id="t">Most people climb to excitement, crash into disappointment, then slowly climb to steady results. The zipline goes straight from the excitement to the steady results.</title>
+  <!-- The same curve as the setup page (docs/index.html), with its colours built in so it
+       reads the same on GitHub in light and dark mode. -->
+  <rect width="640" height="230" rx="10" fill="#fbf8f3"/>
+  <g font-family="Open Sans, Lato, Noto Sans, Helvetica, Arial, sans-serif" font-size="14">
+    <line x1="30" y1="200" x2="620" y2="200" stroke="#e4dccf" stroke-width="2"/>
+    <path d="M30 192 C 90 190, 110 40, 150 34 S 200 150, 250 168 S 330 150, 400 112 S 520 92, 620 90"
+          fill="none" stroke="#6b5d50" stroke-width="3"/>
+    <line x1="150" y1="34" x2="470" y2="89" stroke="#b5651d" stroke-width="3" stroke-dasharray="8 6"/>
+    <circle cx="150" cy="34" r="5" fill="#b5651d"/>
+    <circle cx="250" cy="168" r="5" fill="#6b5d50"/>
+    <circle cx="470" cy="89" r="5" fill="#b5651d"/>
+    <text x="150" y="20" text-anchor="middle" fill="#2b2118">"This is amazing"</text>
+    <text x="250" y="190" text-anchor="middle" fill="#6b5d50">"This is useless"</text>
+    <text x="632" y="76" text-anchor="end" fill="#2b2118">"This actually works"</text>
+    <text x="318" y="52" text-anchor="middle" fill="#b5651d" font-weight="600">zipline</text>
+  </g>
+</svg>
