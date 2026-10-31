@@ -136,8 +136,9 @@ def session_start(event):
     if missing:
         lines.append(f"\nThe workspace isn't set up ({', '.join(missing)} missing). Before the "
                      "first draft, run `python3 tools/setup.py`.")
-    if problems:
-        lines.append("\nworkalong.md has problems, tell the person: " + "; ".join(problems))
+    if problems:  # first, not after the profile text, and before the settings they affect
+        lines.insert(1, "- PROBLEMS in workalong.md, tell the person before anything else: "
+                     + "; ".join(problems) + ". The settings below use the fallbacks.")
     lines.append("\nSome actions stop until the person signs: sending, installing, deleting or "
                  "overwriting their files, spending, and anything the settings add. When one "
                  "stops, you'll be told the specifics and the phrase; pass both on in plain "
@@ -156,15 +157,20 @@ def load_grants():
         grants = json.loads(GRANTS.read_text())
     except (OSError, ValueError):
         grants = []
-    now, keep = time.time(), []
+    now, keep, expired = time.time(), [], False
     for g in grants:
         ttl = PENDING_TTL if g["status"] == "pending" else GRANTED_TTL
         start = g["created"] if g["status"] == "pending" else g.get("granted_at", 0)
         if g["status"] in ("pending", "granted") and now - start > ttl:
             journal("expired", f"{g['phrase']} ({g['status']}, unused)")
-            g["status"] = "expired"
+            g["status"], expired = "expired", True
         if g["status"] in ("pending", "granted") or now - g["created"] < 24 * 3600:
             keep.append(g)
+    # Saved here, with the journal line, not left to the caller: a retried request that was
+    # already pending denies without saving, and one dropped request was journalled as expired
+    # once per retry of something else. Found by an independent review.
+    if expired:
+        save_grants(keep)
     return keep
 
 

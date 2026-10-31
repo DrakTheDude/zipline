@@ -76,7 +76,12 @@ def load(path=None):
             else:
                 settings[key] = int(value)
         elif key in CHOICES and value not in CHOICES[key]:
-            problems.append(f"{key} must be one of {', '.join(sorted(CHOICES[key]))}, got {value!r}")
+            # Say what's used instead, as profile does. For team the fallback is the least
+            # protective value, and a reviewer's whole setup rests on it.
+            problems.append(f"{key} must be one of {', '.join(sorted(CHOICES[key]))}, got {value!r}; "
+                            f"using {DEFAULTS[key] or '(none)'}" + (
+                                ", the least protective: commits and pushes to main are not "
+                                "stopped" if key == "team" else ""))
         else:
             settings[key] = value
     if settings["profile"] not in profile_names():

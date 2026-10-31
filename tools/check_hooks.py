@@ -9,9 +9,9 @@ cases: session-strict, at-limit, over-limit, outside-drafts, repeat, repeat-forg
        gate-free, gate-fail-closed, gate-read, gate-reworded, gate-near-miss, gate-notification,
        gate-shell-write, gate-heredoc, gate-stale-yes, git-branch, git-size, git-push-main,
        git-push-claims, gh-write, session-team, gate-unasked,
-       gate-safeguards, gh-visibility
+       gate-safeguards, gh-visibility, expired-once
 """
-import json, os, pathlib, shutil, subprocess, sys, tempfile
+import json, os, pathlib, shutil, subprocess, sys, tempfile, time
 
 TOOLS = pathlib.Path(__file__).resolve().parent
 FLEET = TOOLS.parent / "docs" / "examples" / "fleet-workalong.md"    # network strict
@@ -173,6 +173,20 @@ def main(case):
         elif case == "gh-visibility":        # the message names the change, not just the repo
             print(before(project, "gh repo edit o/r --visibility public "
                                   "--accept-visibility-change-consequences"))
+        elif case == "expired-once":         # one dropped request, however often the assistant retries
+            # The retried request is already pending, which is the path that didn't save: the
+            # first version of this fixture raised a new request each time, saved, and passed.
+            before(project, "sudo apt-get install gimp")
+            data = json.loads(grants.read_text())
+            data.append({"phrase": "push origin", "status": "pending", "fingerprint": "x",
+                         "created": time.time() - 40 * 60, "details": []})
+            grants.write_text(json.dumps(data))
+            for _ in range(3):
+                before(project, "sudo apt-get install gimp")
+            text = (project / "journal" / time.strftime("%Y-%m.md")).read_text()
+            print(f"expired lines: {text.count('expired     push origin')}")
+            print("stored as: " + next(g["status"] for g in json.loads(grants.read_text())
+                                      if g["phrase"] == "push origin"))
         elif case == "session-team":         # the assistant hears the git rules before it commits
             repo(project, "pair")
             print(hook(project, "session-start", {"session_id": "t", "source": "startup"}))

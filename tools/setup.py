@@ -176,5 +176,17 @@ def main(install):
     return 0
 
 
+def report_problems():
+    """First, what's wrong with workalong.md. This is the command the install steps tell a
+    stranger to run, and the first version dropped the problems settings.py found: team: two
+    developers went unremarked, fell back to solo, and commits to main weren't stopped."""
+    problems = settings_mod.load()[2]
+    for problem in problems:
+        print(f"PROBLEM in workalong.md: {problem}")
+    if problems:
+        print("Fix workalong.md and run this again. Until then, the fallbacks above apply.\n")
+    return len(problems)
+
+
 if __name__ == "__main__":
-    sys.exit(main("--install" in sys.argv[1:]))
+    sys.exit(report_problems() + main("--install" in sys.argv[1:]))
