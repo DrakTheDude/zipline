@@ -3,7 +3,8 @@
 assistant would be told. claims.ini uses this to prove each safeguard still fires.
 
 usage: python3 tools/check_hooks.py <case>
-cases: session-strict, at-limit, over-limit, outside-drafts, repeat, broken-event,
+cases: session-strict, at-limit, over-limit, outside-drafts, repeat, repeat-forgets,
+       repeat-explaining, repeat-pasted, broken-event,
        gate-gimp, gate-signed-once, gate-yes, gate-changed, gate-expired, gate-sealed,
        gate-free, gate-fail-closed, gate-read, gate-reworded, gate-near-miss, gate-notification,
        gate-shell-write, gate-heredoc, gate-stale-yes
@@ -30,6 +31,10 @@ def hook(project, which, event):
     else:
         told = spec.get("additionalContext") or "(silent)"
     return f"exit={r.returncode}\n{told}\n{r.stderr.strip()}"
+
+
+def nudged(told):
+    return "nudged" if "going round in circles" in told else "quiet"
 
 
 def verdict(told):
@@ -99,6 +104,30 @@ def main(case):
             for text in ("no, that's not it", "make the title bigger", "it's still wrong"):
                 out = typed(project, text)
             print(out)
+        elif case == "repeat-forgets":       # two old corrections don't make every later one a loop
+            texts = ["it's still wrong", "no, that's not it", "try again",
+                     "ok, now the footer", "add the phone number", "make it blue", "looks good",
+                     "still wrong on the phone number"]
+            print("RESULT " + " ".join(nudged(typed(project, t)) for t in texts))
+        elif case == "repeat-explaining":    # this morning's two false alarms, in their own shape
+            long_one = ("Had some time to think about this overnight and realised it's more general "
+                        "than where we started. The team at work wants the same thing, because "
+                        "the assistant writes forty files every commit and nobody can review them "
+                        "properly. That's the same problem: they're missing hooks and rules. So "
+                        "let's rework the form to be more generic and add git rules as an option.")
+            long_two = ("Yes, and as I said, I started this to pick one of the ideas and see what I "
+                        "would make. Along the way the real problem surfaced, and it was already "
+                        "something I do at work: a repo people clone, with gates on anything that "
+                        "can't be undone and checks that can fail. My git habit is a branch per "
+                        "slice, commits only there, and only validated work gets pushed for review.")
+            assert min(len(t.split()) for t in (long_one, long_two)) > 60
+            print("RESULT " + " ".join(nudged(typed(project, t)) for t in (long_one, long_two)))
+        elif case == "repeat-pasted":        # someone else's "still wrong", pasted to show it
+            pastes = ["<pasted_content>\nreviewer: the margin is still wrong on mobile\n"
+                      "</pasted_content>\nhere's what they said",
+                      "<pasted_content>\nError: build failed. Same problem as yesterday.\n"
+                      "</pasted_content>\nand this from the build server"]
+            print("RESULT " + " ".join(nudged(typed(project, p)) for p in pastes))
         elif case == "broken-event":
             print(hook(project, "prompt", "this is not json"))
         elif case == "gate-gimp":            # the incident: must stop, with the specifics

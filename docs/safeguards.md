@@ -86,9 +86,16 @@ route. You can say "keep going"; that's your call, and it's written down.
 
 ## Noticing when you're repeating yourself
 
-When your message says the result still isn't right ("still wrong", "that's not
-it", "try again", "didn't work") for the second time, or is nearly the same as one you sent before, the
-assistant is told you may be going round in circles and resets.
+When you say the result still isn't right ("still wrong", "that's not it", "try again",
+"didn't work") twice within your last four messages, or send one nearly the same as an
+earlier one, the assistant is told you may be going round in circles and resets. Then it
+starts counting afresh.
+
+Only short messages count, and only your own words: a correction is usually a line, and a
+long message that says "it's the same problem" is usually someone explaining. Pasted text is
+someone else's words. Both rules came from false alarms in a real session. The trade-off is
+that a long, frustrated message on its own won't trigger it; you can always just say "let's
+step back".
 
 ## The journal
 

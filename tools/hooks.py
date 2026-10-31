@@ -33,10 +33,18 @@ GRANTED_TTL = 5 * 60    # a signature is good for one use within this window
 
 VERSION = re.compile(r"-v(\d+)\.[A-Za-z0-9]+$")
 # Words people use when the last answer missed. One on its own means little ("again" is
-# ordinary), so the nudge needs two in a session, or a message that nearly repeats an earlier one.
+# ordinary), so the nudge needs two within the last few messages, or a message that nearly
+# repeats an earlier one. The first version counted for the whole session and never forgot:
+# once past two, every later "as I said" fired, in a session two days long.
 CUES = re.compile(r"\b(still (wrong|not|the same|broken)|i said|i already (said|told)|not what i"
                   r"|that'?s not (it|right|what)|same (thing|problem|mistake)|(doesn'?t|didn'?t) work"
                   r"|try again|again\?|no,? (that|it'?s|not)|why (is|does|did) it (still|keep))\b", re.I)
+CUE_WINDOW = 4        # the last this-many messages
+# A correction is short: "no, that's not it", "it's still wrong". Every match in a real session's
+# long messages was someone explaining ("it's the same problem they have at work"), and every
+# match in pasted text was someone else's words. Replayed against that session: zero false alarms.
+CUE_MAX_WORDS = 60
+PASTED = re.compile(r"<pasted_content\b.*?</pasted_content>", re.S | re.I)
 
 
 # --- journal: the record the safeguards keep -------------------------------------------------
@@ -78,7 +86,7 @@ def load_state(session):
     except (OSError, ValueError):
         state = {}
     if state.get("session") != session:
-        state = {"session": session, "prompts": [], "cues": 0, "edits": {}}
+        state = {"session": session, "prompts": [], "cues": [], "edits": {}}
     return state
 
 
@@ -288,10 +296,14 @@ def prompt(event):
     text = str(event.get("prompt", ""))
     state = load_state(event.get("session_id"))
     reasons = []
-    if CUES.search(text):
-        state["cues"] += 1
-        if state["cues"] >= 2:
-            reasons.append("they've signalled twice now that the result isn't right")
+    own = PASTED.sub(" ", text)  # what they pasted is someone else's words
+    cue = bool(CUES.search(own)) and len(own.split()) <= CUE_MAX_WORDS
+    recent = state["cues"] if isinstance(state.get("cues"), list) else []
+    recent = (recent + [cue])[-CUE_WINDOW:]
+    if cue and sum(recent) >= 2:
+        reasons.append("they've signalled twice now that the result isn't right")
+        recent = []  # told once; the next nudge needs two new signals
+    state["cues"] = recent
     short = re.sub(r"\s+", " ", text.lower()).strip()
     if len(short) > 15:
         for earlier in state["prompts"]:
