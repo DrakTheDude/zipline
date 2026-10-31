@@ -37,6 +37,7 @@ SABOTAGE = {  # claim-name fragment: (file, old, new) or a shell command
                                        '"for p in python3 python py; do $p -c \\"\\" </dev/null >/dev/null 2>&1 && break; done; '
                                        '$p \\"$CLAUDE_PROJECT_DIR/tools/hooks.py\\" session-start"',
                                        '"python3 \\"$CLAUDE_PROJECT_DIR/tools/hooks.py\\" session-start"'),
+    "knowing which Python runs here": ("tools/hooks.py", '    py = python_command()\n', '    py = "python3"\n'),
     "whichever Python runs it": ("tools/gates.py", 're.fullmatch(r"py(thon[\\d.]*)?(\\.exe)?", tool.lower())',
                                  'tool == "python3"'),
     "announced on the last attempt": ("tools/hooks.py", "elif count == limit:", "elif count == limit + 1:"),

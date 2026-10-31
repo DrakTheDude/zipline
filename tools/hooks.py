@@ -18,7 +18,7 @@ writes: the safeguards record what happened, the assistant doesn't get to.
 A safeguard must never break the session it's guarding: any error is reported to the
 assistant as text and the hook exits 0.
 """
-import difflib, hashlib, json, os, pathlib, re, sys, time
+import difflib, hashlib, json, os, pathlib, re, subprocess, sys, time
 
 ROOT = pathlib.Path(os.environ.get("CLAUDE_PROJECT_DIR") or pathlib.Path(__file__).resolve().parent.parent)
 STATE = ROOT / ".zipline" / "state.json"
@@ -103,6 +103,20 @@ def say(event_name, text):
 
 # --- the three safeguards ---------------------------------------------------------------------
 
+def python_command():
+    """The first of python3, python, py that really runs, as the hooks pick it. On Windows
+    python3 is a shortcut that only opens the Microsoft Store, and the assistant, reading
+    python3 in the rules, tried it first."""
+    for name in ("python3", "python", "py"):
+        try:
+            if subprocess.run([name, "-c", ""], stdin=subprocess.DEVNULL, capture_output=True,
+                              timeout=10).returncode == 0:
+                return name
+        except (OSError, subprocess.SubprocessError):
+            pass
+    return "python3"
+
+
 def session_start(event):
     s, rules, problems = settings_mod.load()
     found = (ROOT / "workalong.md").exists()
@@ -117,6 +131,10 @@ def session_start(event):
             lines.append(f"- {key}: {value}")
     lines.append("- always ask first (wait for an explicit yes that covers the specifics): "
                  + "; ".join(s["always-ask"]))
+    py = python_command()
+    if py != "python3":
+        lines.append(f"- Python on this computer is `{py}`; `python3` doesn't run here. Wherever "
+                     f"the rules say `python3 tools/...`, run `{py} tools/...`.")
     if s["network"] == "strict":
         allowed = ", ".join(s["allow"]) or "nothing"
         lines.append(f"- network is STRICT: anything that goes out over the network (downloads, "
@@ -135,7 +153,7 @@ def session_start(event):
     missing = [f for f in meta["folders"] if not (ROOT / f).is_dir()]
     if missing:
         lines.append(f"\nThe workspace isn't set up ({', '.join(missing)} missing). Before the "
-                     "first draft, run `python3 tools/setup.py`.")
+                     f"first draft, run `{py} tools/setup.py`.")
     if problems:  # first, not after the profile text, and before the settings they affect
         lines.insert(1, "- PROBLEMS in workalong.md, tell the person before anything else: "
                      + "; ".join(problems) + ". The settings below use the fallbacks.")

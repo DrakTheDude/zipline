@@ -99,12 +99,18 @@ sensible defaults apply.
 git clone https://github.com/DrakTheDude/zipline.git
 cd zipline
 (put workalong.md here)
-claude
+claude "Hi Claude!"
 ```
+
+Starting with a greeting gets the assistant talking first: it says what it read from
+`workalong.md` (the business, the attempt limit, what it always asks about) and what it can
+help with, so you can check it understood. Without one, Claude Code sits at an empty prompt,
+sometimes with a suggestion like "lint my code" that you can ignore. Typing "Hi" works too.
 
 The first time, the assistant runs `tools/setup.py`: it checks the computer has what drafts
 need, makes the folders, turns on the profile's plugins, and asks before installing anything.
-Restart Claude Code once afterwards so the plugins load.
+If Claude Code or the assistant says a restart is needed for the plugins, type `/exit` and
+start it again the same way. That's needed once, not every time.
 
 **2b. For an existing repository** (code or infrastructure), add zipline to it. From the
 repository's top folder, with zipline cloned next to it:
