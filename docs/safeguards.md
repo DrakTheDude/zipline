@@ -35,6 +35,8 @@ it's about to do. If it's one of these, it doesn't run:
 | writing a file outside the zipline folder | `write notes.txt` | the full path |
 | a connected service (email, payments, calendar) that sends, charges or deletes | `email james`, `charge alex` | the service, the action and who it's for |
 | with `network: strict`, reaching anything not on your `allow` list | `connect example.org` | the address |
+| a commit with more files than `commit-files` (default 15) | `commit 23 files` | how many, and the suggestion to split it |
+| changing GitHub with `gh`: merging, repo settings, releases, review rules | `change github` | the command |
 
 The assistant tells you the specifics in plain words, and the phrase. **To let it go ahead,
 type the phrase.** That lets exactly that action run, once. Then it stops again next time.
@@ -57,6 +59,30 @@ type the phrase.** That lets exactly that action run, once. Then it stops again 
 
 Some things are never allowed, signed or not: changing `journal/` or `.zipline/`, where the
 safeguards keep their records.
+
+### Git rules
+
+`team` in `workalong.md` says how many people review the work.
+
+| | `solo` (default) | `pair` | `team` |
+|---|---|---|---|
+| commit on main | allowed | refused: make a branch named for the piece of work | refused |
+| push to main | signed (`push origin`) | refused: push the branch, open a pull request | refused |
+| push a branch | signed | signed | signed |
+| reviews before merging | none | 1 | 2 |
+
+Refused means no signature can allow it; a branch costs nothing, and a signature here would
+become a habit. Reviews are enforced by GitHub, not here: `tools/setup.py` prints the command
+that sets the rule on the repository (signed as `change github`; private repositories need a
+paid GitHub plan for it). GitHub won't let you approve your own pull request, which is why
+`solo` pushes directly.
+
+At every team size, if the repository has a `claims.ini`, a push is refused while any claim
+fails, and you're told which. If the claims take more than 45 seconds, the push asks for a
+signature and says it's unvalidated.
+
+The rules read the branch at the moment the command is checked: `git switch -c fix && git
+commit` in one command is judged on the branch you were on. Run them as two commands.
 
 ### What doesn't stop
 

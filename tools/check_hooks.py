@@ -7,7 +7,8 @@ cases: session-strict, at-limit, over-limit, outside-drafts, repeat, repeat-forg
        repeat-explaining, repeat-pasted, broken-event,
        gate-gimp, gate-signed-once, gate-yes, gate-changed, gate-expired, gate-sealed,
        gate-free, gate-fail-closed, gate-read, gate-reworded, gate-near-miss, gate-notification,
-       gate-shell-write, gate-heredoc, gate-stale-yes
+       gate-shell-write, gate-heredoc, gate-stale-yes, git-branch, git-size, git-push-main,
+       git-push-claims, gh-write
 """
 import json, os, pathlib, shutil, subprocess, sys, tempfile
 
@@ -80,6 +81,31 @@ def write(project, rel):
                                         "tool_input": {"file_path": str(path)}})
 
 
+def repo(project, team, claims=None):
+    """Make the throwaway project a git repo on main with one commit, team rules, and a limit of
+    three files per commit."""
+    (project / "workalong.md").write_text(f"---\nzipline: 1\nprofile: code\nteam: {team}\n"
+                                          "commit-files: 3\n---\n")
+    if claims:
+        (project / "claims.ini").write_text(claims)
+    env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@example.com",
+               GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@example.com")
+    for cmd in (["init", "-q", "-b", "main"], ["add", "-A"], ["commit", "-q", "-m", "start"]):
+        subprocess.run(["git", "-C", str(project), *cmd], check=True, env=env)
+
+    def git(*args):
+        subprocess.run(["git", "-C", str(project), *args], check=True, env=env,
+                       capture_output=True)
+    return git
+
+
+def stage(project, git, n):
+    names = [f"file{i}.txt" for i in range(n)]
+    for name in names:
+        (project / name).write_text(f"{n}\n")
+    git("add", *names)  # only these: -A would pick up files left from an earlier step
+
+
 def main(case):
     with tempfile.TemporaryDirectory() as tmp:
         project = pathlib.Path(tmp)
@@ -129,6 +155,41 @@ def main(case):
                       "<pasted_content>\nError: build failed. Same problem as yesterday.\n"
                       "</pasted_content>\nand this from the build server"]
             print("RESULT " + " ".join(nudged(typed(project, p)) for p in pastes))
+        elif case == "git-branch":           # pair: nothing committed on main; a branch is fine
+            git = repo(project, "pair")
+            stage(project, git, 1)
+            steps = [before(project, "git commit -m 'small fix'")]
+            git("switch", "-q", "-c", "small-fix")
+            steps.append(before(project, "git commit -m 'small fix'"))
+            print("RESULT " + " ".join(verdict(x) for x in steps))
+        elif case == "git-size":             # forty files in a commit can't be reviewed
+            git = repo(project, "solo")
+            stage(project, git, 5)
+            steps = [before(project, "git commit -m everything")]
+            git("reset", "-q")
+            stage(project, git, 2)
+            steps.append(before(project, "git commit -m 'one thing'"))
+            print("\n".join(steps[:1]))
+            print("RESULT " + " ".join(verdict(x) for x in steps))
+        elif case == "git-push-main":        # pair: main is reached by a reviewed pull request
+            git = repo(project, "pair")
+            steps = [before(project, "git push origin main")]
+            git("switch", "-q", "-c", "small-fix")
+            steps += [before(project, "git push"), before(project, "git push -u origin small-fix")]
+            print("RESULT " + " ".join(verdict(x) for x in steps))
+        elif case == "git-push-claims":      # only validated work is pushed
+            failing = "[the menu prints]\nprove  = false\nexpect = x\n"
+            git = repo(project, "solo", claims=failing)
+            steps = [before(project, "git push origin main")]
+            (project / "claims.ini").write_text("[the menu prints]\nprove  = echo ok\nexpect = ok\n")
+            steps.append(before(project, "git push origin main"))
+            print(steps[0])
+            print("RESULT " + " ".join(verdict(x) for x in steps))
+        elif case == "gh-write":             # GitHub changes go through the person; reading doesn't
+            steps = [before(project, "gh pr merge 12 --squash"),
+                     before(project, "gh api -X PUT repos/o/r/branches/main/protection --input p.json"),
+                     before(project, "gh pr view 12"), before(project, "gh api repos/o/r/pulls")]
+            print("RESULT " + " ".join(verdict(x) for x in steps))
         elif case == "broken-event":
             print(hook(project, "prompt", "this is not json"))
         elif case == "gate-gimp":            # the incident: must stop, with the specifics

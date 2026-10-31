@@ -18,12 +18,14 @@ LEVEL_ATTEMPTS = {"new": 2, "burned": 2, "pattern": 4}
 DEFAULTS = {
     "zipline": FORMAT, "profile": "business", "business": "", "level": "", "attempts": 3, "explain": "normal",
     "network": "standard", "allow": [], "users": "just-me", "reaches": [], "also-ask": [],
+    "team": "solo", "commit-files": 15,
 }
 CHOICES = {
     "level": {"new", "burned", "pattern"},
     "explain": {"more", "normal", "less"},
     "network": {"standard", "strict"},
     "users": {"just-me", "staff"},
+    "team": {"solo", "pair", "team"},
 }
 REACHES = {"email", "calendar", "accounts", "files", "shell", "remote-machines"}
 LISTS = {"allow", "reaches", "also-ask"}
@@ -68,7 +70,7 @@ def load(path=None):
             problems.append(f"unknown setting {key!r} (known: {', '.join(DEFAULTS)})")
         elif key in LISTS:
             settings[key] = [v.strip() for v in value.split(",") if v.strip()]
-        elif key in ("zipline", "attempts"):
+        elif key in ("zipline", "attempts", "commit-files"):
             if not value.isdigit():
                 problems.append(f"{key} must be a whole number, got {value!r}")
             else:
@@ -87,6 +89,9 @@ def load(path=None):
         settings["attempts"] = LEVEL_ATTEMPTS[settings["level"]]
     if not 1 <= settings["attempts"] <= 10:
         problems.append(f"attempts must be between 1 and 10, got {settings['attempts']}")
+    if settings["commit-files"] < 1:
+        problems.append("commit-files must be at least 1")
+        settings["commit-files"] = DEFAULTS["commit-files"]
     unknown = [r for r in settings["reaches"] if r not in REACHES]
     if unknown:
         problems.append(f"reaches: don't know {', '.join(unknown)} (known: {', '.join(sorted(REACHES))})")
@@ -121,7 +126,7 @@ def main(argv):
     settings, rules, problems = load(path)
     print(f"{path}: " + ("found" if path.exists() else "not found, using defaults"))
     for key in ("profile", "business", "level", "attempts", "explain", "network", "allow", "users",
-                "reaches", "always-ask"):
+                "reaches", "team", "commit-files", "always-ask"):
         value = settings[key]
         value = ", ".join(value) if isinstance(value, list) else value
         print(f"  {key:<10} {value if value != '' else '-'}")

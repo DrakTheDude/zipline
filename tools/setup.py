@@ -69,8 +69,27 @@ def fonts_present():
     return all(name in out for name in ("open sans", "lato"))
 
 
+REVIEWS = {"pair": 1, "team": 2}
+
+
+def review_rule(team):
+    """zipline stops commits and pushes to main locally; the reviews themselves are GitHub's to
+    enforce. Print the rule for this team size; applying it is a signed action (gh api -X PUT)."""
+    if team not in REVIEWS:
+        return
+    n = REVIEWS[team]
+    body = ('{"required_pull_request_reviews":{"required_approving_review_count":%d},'
+            '"enforce_admins":true,"required_status_checks":null,"restrictions":null}' % n)
+    print(f"\nteam: {team} means {n} review{'s' if n > 1 else ''} before anything reaches main. "
+          "zipline stops commits and pushes to main on this computer; GitHub enforces the "
+          "reviews. To set that rule on the repository (run from inside it, needs admin rights; "
+          "private repositories need a paid GitHub plan for it):\n")
+    print(f"  echo '{body}' | gh api -X PUT 'repos/{{owner}}/{{repo}}/branches/main/protection' --input -")
+
+
 def main(install):
-    profile = settings_mod.load()[0]["profile"]
+    s = settings_mod.load()[0]
+    profile = s["profile"]
     meta = settings_mod.load_profile(profile)[0]
     for folder in meta["folders"]:
         os.makedirs(os.path.join(ROOT, folder), exist_ok=True)
@@ -101,6 +120,8 @@ def main(install):
         print("\nFolders ready: " + ", ".join(f + "/" for f in meta["folders"]))
     if not meta["tools"]:
         print(f"The {profile} profile needs nothing extra installed.")
+
+    review_rule(s["team"])
 
     cmds = install_commands(mgr, packages)
     if not cmds:

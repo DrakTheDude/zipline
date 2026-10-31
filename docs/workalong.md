@@ -45,6 +45,8 @@ also-ask: anything with a price on it
 | `users` | `just-me`, `staff` | `just-me` | `staff` means other people use this too, so the house rules double as a staff policy |
 | `reaches` | comma-separated | (none) | what the assistant can get at: `email`, `calendar`, `accounts`, `files`, `shell`, `remote-machines` |
 | `also-ask` | comma-separated, your words | (none) | things that need your OK on top of the fixed list |
+| `team` | `solo`, `pair`, `team` | `solo` | how many people review the work: `pair` and `team` keep commits and pushes off main and need 1 or 2 reviews ([git rules](safeguards.md#git-rules)) |
+| `commit-files` | a whole number | `15` | the most files in one commit before it stops and suggests splitting it |
 
 ### Profiles
 

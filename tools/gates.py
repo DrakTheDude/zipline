@@ -14,7 +14,7 @@ assistant that's confident and wrong, not one that's trying to hide what it does
 
     python3 tools/gates.py '<shell command>'     show what a command would need, for testing
 """
-import os, pathlib, re, shlex, sys, tempfile
+import json, os, pathlib, re, shlex, subprocess, sys, tempfile
 from dataclasses import dataclass, field
 
 
@@ -60,6 +60,7 @@ PKG_NETWORK = {"install", "add", "update", "upgrade", "refresh", "download", "se
 DELETE_TOOLS = {"rm", "rmdir", "shred", "unlink", "truncate"}
 MAIL_TOOLS = {"sendmail", "mail", "mailx", "mutt", "swaks"}
 # Folders where the assistant's own work lives: deleting or overwriting there is free.
+CLAIMCHECK = pathlib.Path(__file__).resolve().parent / "claimcheck.py"
 SCRATCH = ("drafts", "previews")
 # The person's own things: overwriting these needs their signature.
 OWNER = ("brand", "ready", "workalong.md", "lessons.md")
@@ -179,8 +180,10 @@ def classify_bash(command, s, root):
             target = words[1] if len(words) > 1 else "~"
             cwd = (cwd / os.path.expandvars(os.path.expanduser(target))).resolve()
             continue
-        for path in written_paths(words, cwd) + redirect_targets(part, cwd):
-            g = write_gate(path, root)
+        found = [write_gate(path, root) for path in written_paths(words, cwd) + redirect_targets(part, cwd)]
+        if pathlib.Path(words[0]).name == "git":
+            found.append(git_gate(words, cwd, s))
+        for g in found:
             if g and g.blocked:
                 return g
             if g and all(g.phrase != x.phrase for x in gates):
@@ -238,8 +241,15 @@ def classify_bash(command, s, root):
                               [f"sends an email{' to ' + to if to else ''} from this computer"]))
             continue
         if tool == "git" and args[:1] == ["push"]:
-            gates.append(Gate("push", short(args[1] if len(args) > 1 else "origin"),
-                              ["publishes commits to a remote repository"]))
+            g = Gate("push", short(args[1] if len(args) > 1 else "origin"),
+                     ["publishes commits to a remote repository"])
+            if all(g.phrase != x.phrase for x in gates):  # the git rules may have said more
+                gates.append(g)
+            continue
+        if tool == "gh":
+            g = gh_gate(words)
+            if g:
+                gates.append(g)
             continue
         if tool == "curl" and re.search(r"(^|\s)(-X\s*(POST|PUT|PATCH|DELETE)|-d|--data\S*|-F|--form|-T|--upload-file)(\s|=|$)", " ".join(words)):
             host = (hosts_in(words) or ["a server"])[0]
@@ -266,6 +276,98 @@ def classify_bash(command, s, root):
     for extra in gates[1:]:
         first.details.append(f"also: {extra.phrase} ({'; '.join(extra.details)})")
     return first
+
+
+def git_out(cwd, *args):
+    try:
+        return subprocess.run(["git", "-C", str(cwd), *args], capture_output=True, text=True,
+                              timeout=10).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def main_branches(top):
+    names = {"main", "master"}
+    head = git_out(top, "symbolic-ref", "--short", "refs/remotes/origin/HEAD")
+    if "/" in head:
+        names.add(head.split("/", 1)[1])
+    return names
+
+
+def failing_claims(top):
+    """Names of failing claims in the repo's claims.ini; None if it couldn't be checked in time."""
+    try:
+        out = subprocess.run([sys.executable, str(CLAIMCHECK), "-f", str(top / "claims.ini"),
+                              "--json"], cwd=top, capture_output=True, text=True, timeout=45).stdout
+        results = json.loads(out)["claims"]
+    except (OSError, subprocess.SubprocessError, ValueError, KeyError):
+        return None
+    return [r["claim"] for r in results if r["status"] == "fail"]
+
+
+def git_gate(words, cwd, s):
+    """The git rules from workalong.md: `team` and `commit-files`. Reviews themselves are
+    GitHub's to enforce (branch rules); what can be stopped here is work reaching main without
+    them, commits too big to review, and pushing work whose claims fail."""
+    if len(words) > 2 and words[1] == "-C":
+        cwd, words = (cwd / words[2]).resolve(), words[:1] + words[3:]
+    args = [w for w in words[1:] if not w.startswith("-")]
+    top = git_out(cwd, "rev-parse", "--show-toplevel") if args else ""
+    if not top:
+        return None
+    top, team = pathlib.Path(top), s["team"]
+    branch = git_out(top, "branch", "--show-current")
+    if args[0] == "commit":
+        if team != "solo" and branch in main_branches(top):
+            return Gate("commit", branch, blocked=(
+                f"with team: {team}, nothing is committed on {branch}: work reaches it through a "
+                f"reviewed pull request. Make a branch named for this piece of work first "
+                f"(git switch -c <slice-name>), then commit there."))
+        files = set(git_out(top, "diff", "--cached", "--name-only").splitlines())
+        if any(re.match(r"^-[a-zA-Z]*a[a-zA-Z]*$", w) or w == "--all" for w in words[2:]):
+            files |= set(git_out(top, "diff", "--name-only").splitlines())
+        files.discard("")
+        if len(files) > s["commit-files"]:
+            return Gate("commit", f"{len(files)} files", [
+                f"commits {len(files)} files at once; the limit is {s['commit-files']} so that a "
+                "person can review it", "better: split it into commits with one purpose each"])
+    if args[0] == "push":
+        refs = args[2:]
+        targets = [r.lstrip("+").split(":")[-1].removeprefix("refs/heads/") for r in refs] or [branch]
+        on_main = [t for t in targets if t in main_branches(top)]
+        if team != "solo" and on_main:
+            return Gate("push", on_main[0], blocked=(
+                f"with team: {team}, work reaches {on_main[0]} through a pull request with "
+                f"{'one review' if team == 'pair' else 'two reviews'}, not a push. Push the branch "
+                f"(git push -u origin <branch>) and open a pull request."))
+        if (top / "claims.ini").exists():
+            failing = failing_claims(top)
+            if failing:
+                return Gate("push", "unchecked", blocked=(
+                    "only validated work is pushed, and these claims fail: " + "; ".join(failing)
+                    + ". Fix them, or change the claim if it's out of date, then push."))
+            if failing is None:
+                return Gate("push", short(args[1] if len(args) > 1 else "origin"), [
+                    "publishes commits to a remote repository",
+                    "claims.ini couldn't be checked in time, so this push is unvalidated"])
+    return None
+
+
+GH_WRITES = {("pr", "merge"), ("repo", "delete"), ("repo", "edit"), ("repo", "archive"),
+             ("repo", "rename"), ("release", "create"), ("release", "delete")}
+
+
+def gh_gate(words):
+    """GitHub changes made through its command-line tool: merges, repo settings, releases, and
+    API calls that write (including branch rules)."""
+    args = [w for w in words[1:] if not w.startswith("-")]
+    text = " ".join(words)
+    writes_api = args[:1] == ["api"] and re.search(
+        r"(-X|--method)[ =]?(POST|PUT|PATCH|DELETE)|\s(-f|-F|--field|--raw-field|--input)\s", text, re.I)
+    if tuple(args[:2]) in GH_WRITES or writes_api:
+        return Gate("change", "github", [f"changes GitHub: gh {' '.join(args[:3])}",
+                                         "affects everyone who uses the repository"])
+    return None
 
 
 def write_gate(path, root):

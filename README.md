@@ -108,7 +108,9 @@ matters, so here it is:
 
 - **Enforced**, whatever the assistant decides: installing, sending, uploading, publishing,
   deleting or moving your files, changing `brand/` and your settings, writing outside the
-  folder, and connected-service actions that send, charge or delete. They stop until you sign.
+  folder, connected-service actions that send, charge or delete, commits too big to review,
+  and changes to GitHub. They stop until you sign. With a team, commits and pushes to main are
+  refused outright, and so is any push while the project's claims fail.
   Your settings are put in front of the assistant at the start of every session. Attempts are
   counted and the limit announced. The journal can't be edited by the assistant.
 - **Instructions**, which the assistant follows but nothing checks: agreeing the check first,
