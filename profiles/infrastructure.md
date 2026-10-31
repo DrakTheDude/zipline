@@ -3,6 +3,7 @@ profile: infrastructure
 for: scripts and configuration that change machines: installs, images, deployments, a fleet
 folders:
 tools:
+plugins: engineering, operations
 ---
 
 ## You prepare, the person runs it

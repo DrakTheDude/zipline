@@ -35,7 +35,7 @@ also-ask: anything with a price on it
 | setting | values | default | what it does |
 |---|---|---|---|
 | `zipline` | `1` | `1` | which version of this format the file uses |
-| `profile` | `business`, `code`, `infrastructure` | `business` | what kind of work this is (see below). Picks the working rules, folders and tools |
+| `profile` | `business`, `code`, `infrastructure` | `business` | what kind of work this is (see below). Picks the working rules, folders, tools and plugins |
 | `business` | one line | (none) | what the business is, so the assistant starts with the right picture |
 | `level` | `new`, `burned`, `pattern` | (none) | where you are with assistants (see below). Sets `attempts` unless you set it yourself |
 | `attempts` | 1 to 10 | from `level`, or 3 | how many goes at the same thing before the assistant stops and steps back |
@@ -56,9 +56,9 @@ of every session.
 
 | profile | for | what it adds |
 |---|---|---|
-| `business` | emails, quotes, logos, menus, spreadsheets, documents | `brand/`, `drafts/`, `ready/`; every version a new file; the assistant looks at a picture of each draft before describing it; says up front what it can't make |
-| `code` | a repository people review | small changes with one purpose each; run the project's checks before saying it works; an attempt is another fix to the same failure |
-| `infrastructure` | scripts and configuration that change machines | the assistant prepares, the person runs it with their own access; the check is written before the script; test on a throwaway machine per target first |
+| `business` | emails, quotes, logos, menus, spreadsheets, documents | `brand/`, `drafts/`, `ready/`; every version a new file; the assistant looks at a picture of each draft before describing it; says up front what it can't make; the small-business plugin |
+| `code` | a repository people review | small changes with one purpose each; run the project's checks before saying it works; an attempt is another fix to the same failure; the engineering plugin |
+| `infrastructure` | scripts and configuration that change machines | the assistant prepares, the person runs it with their own access; the check is written before the script; test on a throwaway machine per target first; the engineering and operations plugins |
 
 ### Levels
 

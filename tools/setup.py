@@ -8,7 +8,7 @@ What it checks and which folders it makes depend on the profile in workalong.md 
 brand/, drafts/, ready/ and the tools that turn drafts into pictures). See profiles/.
 Exit code = the number of missing tools that drafts depend on.
 """
-import os, platform, shutil, subprocess, sys
+import json, os, platform, shutil, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -69,6 +69,39 @@ def fonts_present():
     return all(name in out for name in ("open sans", "lato"))
 
 
+MARKETPLACE = "knowledge-work-plugins"  # registered in .claude/settings.json
+
+
+def use_plugins(profile, meta):
+    """Turn on this profile's plugins and turn off the other profiles', in the per-computer
+    .claude/settings.local.json. Merged into what's there, never replacing it: the file also
+    holds the person's own permissions. The shared settings.json keeps small-business on, so a
+    fresh copy with no workalong.md works as a business setup without running this."""
+    every = {p for name in settings_mod.profile_names()
+             for p in settings_mod.load_profile(name)[0]["plugins"]}
+    wanted = {f"{p}@{MARKETPLACE}": p in meta["plugins"] for p in sorted(every)}
+    path = os.path.join(ROOT, ".claude", "settings.local.json")
+    try:
+        with open(path) as f:
+            local = json.load(f)
+    except FileNotFoundError:
+        local = {}
+    except ValueError:
+        print(f"\n.claude/settings.local.json isn't valid JSON, so plugins weren't changed. Fix it "
+              f"or remove it, then run this again.")
+        return
+    if local.get("enabledPlugins", {}) | wanted == local.get("enabledPlugins"):
+        print(f"\nPlugins for {profile}: {', '.join(meta['plugins']) or 'none'} (already set)")
+        return
+    local["enabledPlugins"] = {**local.get("enabledPlugins", {}), **wanted}
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(local, f, indent=2)
+        f.write("\n")
+    print(f"\nPlugins for {profile}: {', '.join(meta['plugins']) or 'none'}. Set in "
+          ".claude/settings.local.json; they load the next time Claude Code starts here.")
+
+
 REVIEWS = {"pair": 1, "team": 2}
 
 
@@ -121,6 +154,7 @@ def main(install):
     if not meta["tools"]:
         print(f"The {profile} profile needs nothing extra installed.")
 
+    use_plugins(profile, meta)
     review_rule(s["team"])
 
     cmds = install_commands(mgr, packages)

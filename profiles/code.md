@@ -3,6 +3,7 @@ profile: code
 for: a code repository people review: an app, a service, a library, automation
 folders:
 tools:
+plugins: engineering
 ---
 
 ## Changes someone can review

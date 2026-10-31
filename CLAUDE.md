@@ -22,7 +22,8 @@ these, and the house rules sit on top of both.
 If the profile's folders don't exist yet, or a tool it relies on fails, run
 `python3 tools/setup.py`. It checks for what this kind of work needs, creates the folders, and
 prints the install command for anything missing. **Show the person that command and ask before
-running it** with `--install`.
+running it** with `--install`. If it says the plugins changed, tell the person they load the next time
+they start Claude Code in this folder.
 
 ## Before you make anything that matters, agree how you'll check it
 

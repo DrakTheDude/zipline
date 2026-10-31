@@ -123,9 +123,13 @@ has every detail, and [SECURITY.md](SECURITY.md) the limits.
 
 ## Builds on
 
-The [Small Business plugin](https://github.com/anthropics/knowledge-work-plugins/tree/main/small-business)
-for Claude Code (proposals, invoices, payroll prep and more) is turned on when you open this
-folder. zipline adds the working habits around it.
+Anthropic's [knowledge-work plugins](https://github.com/anthropics/knowledge-work-plugins) for
+Claude Code, chosen by profile: **small-business** (proposals, invoices, payroll prep and more)
+for `business`, **engineering** (code review, debugging, testing, incident response) for
+`code`, and engineering plus **operations** (runbooks, change requests, risk assessment) for
+`infrastructure`. `tools/setup.py` turns on the profile's plugins for this folder; they load
+the next time you start Claude Code here. zipline adds the working habits around them. A new
+plugin is one line in a profile.
 
 ## Who it's for
 

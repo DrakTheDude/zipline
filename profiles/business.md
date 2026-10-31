@@ -3,6 +3,7 @@ profile: business
 for: running a business: emails, quotes, logos, menus, spreadsheets, documents
 folders: brand, drafts, ready
 tools: rsvg-convert, pdftoppm, web page renderer, LibreOffice, Inkscape, open fonts
+plugins: small-business
 ---
 
 ## Where things go

@@ -113,10 +113,10 @@ def load_profile(name):
     and tools it needs, and the working rules the assistant is given at session start."""
     path = PROFILES / f"{name}.md"
     if not path.exists():  # reported by load(); the core rules in CLAUDE.md still apply
-        return {"folders": [], "tools": [], "for": "(profile file missing)"}, ""
+        return {"folders": [], "tools": [], "plugins": [], "for": "(profile file missing)"}, ""
     raw, rules, _ = parse(path.read_text(errors="replace"))
     meta = {k: [v.strip() for v in raw.get(k, "").split(",") if v.strip()]
-            for k in ("folders", "tools")}
+            for k in ("folders", "tools", "plugins")}
     meta["for"] = raw.get("for", "")
     return meta, rules
 
