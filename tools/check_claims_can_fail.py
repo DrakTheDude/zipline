@@ -29,6 +29,7 @@ SABOTAGE = {  # claim-name fragment: (file, old, new) or a shell command
     "starts knowing who reviews": ("tools/hooks.py", '    if s["team"] != "solo":\n        lines.append(f"- team is', '    if False:\n        lines.append(f"- team is'),
     "no request waiting is called out": ("tools/hooks.py", "    if not 2 <= len(words) <= 3 or words[0] not in SIGN_VERBS:", "    if True:"),
     "safeguards' own files": ("tools/gates.py", "    rel = safeguard_file(path, root)\n    if rel:", "    rel = safeguard_file(path, root)\n    if False:"),
+    "says what it changes": ("tools/gates.py", "        if visibility:\n", "        if False:\n"),
     "announced on the last attempt": ("tools/hooks.py", "elif count == limit:", "elif count == limit + 1:"),
     "going past the limit": ("tools/hooks.py", 'journal("over-limit"', 'journal("over"'),
     'second "still wrong"': ("tools/hooks.py", "if cue and sum(recent) >= 2:", "if cue and sum(recent) >= 3:"),

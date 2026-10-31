@@ -9,7 +9,7 @@ cases: session-strict, at-limit, over-limit, outside-drafts, repeat, repeat-forg
        gate-free, gate-fail-closed, gate-read, gate-reworded, gate-near-miss, gate-notification,
        gate-shell-write, gate-heredoc, gate-stale-yes, git-branch, git-size, git-push-main,
        git-push-claims, gh-write, session-team, gate-unasked,
-       gate-safeguards
+       gate-safeguards, gh-visibility
 """
 import json, os, pathlib, shutil, subprocess, sys, tempfile
 
@@ -170,6 +170,9 @@ def main(case):
                      edit("drafts/menu/menu-v1.html")]
             print(steps[0])
             print("RESULT " + " ".join(verdict(x) for x in steps))
+        elif case == "gh-visibility":        # the message names the change, not just the repo
+            print(before(project, "gh repo edit o/r --visibility public "
+                                  "--accept-visibility-change-consequences"))
         elif case == "session-team":         # the assistant hears the git rules before it commits
             repo(project, "pair")
             print(hook(project, "session-start", {"session_id": "t", "source": "startup"}))

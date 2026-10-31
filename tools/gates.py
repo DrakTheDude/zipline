@@ -365,8 +365,19 @@ def gh_gate(words):
     writes_api = args[:1] == ["api"] and re.search(
         r"(-X|--method)[ =]?(POST|PUT|PATCH|DELETE)|\s(-f|-F|--field|--raw-field|--input)\s", text, re.I)
     if tuple(args[:2]) in GH_WRITES or writes_api:
-        return Gate("change", "github", [f"changes GitHub: gh {' '.join(args[:3])}",
-                                         "affects everyone who uses the repository"])
+        # The whole command, options included. The first version dropped options and showed
+        # "gh repo edit DrakTheDude/zipline" for the change that made the repository public.
+        what = [f"runs: {text if len(text) <= 160 else text[:157] + '...'}"]
+        visibility = ""
+        for i, w in enumerate(words):
+            if w.startswith("--visibility="):
+                visibility = w.split("=", 1)[1]
+            elif w == "--visibility" and i + 1 < len(words):
+                visibility = words[i + 1]
+        if visibility:
+            what.insert(0, f"makes the repository {visibility}" +
+                        (": anyone can see it, and copy it" if visibility == "public" else ""))
+        return Gate("change", "github", what + ["affects everyone who uses the repository"])
     return None
 
 
