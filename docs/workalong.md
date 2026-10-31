@@ -54,18 +54,26 @@ also-ask: anything with a price on it
 
 ### Always asks first
 
-These need your signature at every level, and `workalong.md` can't remove any of them. The
-assistant shows you what the action will do and a short phrase, like `install gimp` or
-`email james`; typing it lets that exact action run once. "Yes" doesn't count:
+These five need your OK at every level, and `workalong.md` can't remove any of them:
 
 - **send**: email, message, post, upload
 - **promise**: setting or changing a price, a date, or a promise to a customer
-- **delete**: deleting, overwriting or moving your files outside `drafts/`
+- **delete**: deleting, overwriting or moving your files (except the assistant's own drafts
+  and previews)
 - **spend**: paying for or signing up to anything
 - **install**: installing software on your computer
 
+All but one are enforced: the action stops, the assistant shows you what it will do and a
+short phrase, like `install gimp` or `email james`, and typing it lets that exact action run
+once. "Yes" doesn't count. **promise** is the exception: a price inside a draft looks like any
+other text, so the assistant is told to ask, and the draft can't go out without a send, which
+is enforced. [safeguards.md](safeguards.md) has the full list of what stops.
+
 `also-ask` adds to this list. Nothing takes away from it: the tools always start from these
-five, whatever the file says.
+five, whatever the file says, and a line like "don't ask before sending" is reported as a
+mistake. What you add under `also-ask` is read by the assistant at the start of every session
+and followed as an instruction; the tools can't recognise "anything with a price on it" in a
+command, so it doesn't get a signature.
 
 ## When a house rule and a setting disagree
 

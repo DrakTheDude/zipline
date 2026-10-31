@@ -120,10 +120,13 @@
 
     <fieldset>
       <legend>What needs your OK</legend>
-      <p class="hint">These always need you to type a short sign-off first, at every level:
-        <strong>sending</strong> anything, <strong>prices, dates and promises</strong> to
-        customers, <strong>deleting</strong> your files, <strong>spending</strong> money, and
-        <strong>installing</strong> software. You can add to this list, not take away.</p>
+      <p class="hint">These always need your OK, at every level: <strong>sending</strong>
+        anything, <strong>deleting</strong> your files, <strong>spending</strong> money,
+        <strong>installing</strong> software, and <strong>prices, dates and promises</strong> to
+        customers. For all but the last, the action stops until you type a short phrase like
+        <code>email james</code>; "yes" doesn't count. A price in a draft can't be spotted
+        automatically, so for that one the assistant asks. You can add to this list, not take
+        away.</p>
       <label for="alsoAsk">Anything else? (optional, separated by commas)</label>
       <input id="alsoAsk" name="alsoAsk" type="text" placeholder="e.g. anything with a price on it">
       <p id="warn" class="warn" hidden></p>
@@ -153,7 +156,11 @@
       subscription, or use your own API key).</li>
     <li>Download zipline from <a href="https://github.com/DrakTheDude/zipline">GitHub</a>.</li>
     <li>Put <code>workalong.md</code> in its top folder, open the folder in Claude Code, and
-      say what you want to get done.</li>
+      say what you want to get done. The first time, it checks your computer has what drafts
+      need and asks before installing anything.</li>
+    <li>When the assistant needs your OK it tells you exactly what will happen and the phrase
+      to type. <a href="https://github.com/DrakTheDude/zipline/blob/main/docs/safeguards.md">What
+      stops, and how signing works</a>.</li>
   </ol>
 </section>
 

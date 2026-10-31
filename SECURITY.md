@@ -24,11 +24,15 @@ realistic. If it's affecting real businesses right now, say so in the subject li
 
 - Anything in this repository that sends a business's files, drafts or customer details
   anywhere, on any path
-- The gitignore failing to keep `brand/`, `drafts/`, `ready/`, `lessons.md` or `workalong.md`
-  out of a commit
+- The gitignore failing to keep `brand/`, `drafts/`, `ready/`, `previews/`, `journal/`,
+  `lessons.md` or `workalong.md` out of a commit
 - A way to get the assistant past the ask-first list in `CLAUDE.md` (sending, prices and
   promises, deleting files, spending money, installing software) using this repository's
   instructions as written
+- An action listed in [docs/safeguards.md](docs/safeguards.md) as stopping that runs without
+  the person's signature, or a signature that covers more than the action it was shown for
+- A way for anything other than the person's own typing to sign
+- The journal being changed by anything but the safeguards
 - `tools/setup.py` installing anything without `--install`
 - `tools/look.py` reporting OK on a draft that refers to a file that doesn't exist
 
