@@ -109,7 +109,7 @@ def session_start(event):
     lines = ["zipline settings for this session (from workalong.md, loaded automatically; "
              "these apply to everything you do here, not only drafts):" if found else
              "zipline: no workalong.md here, so the defaults apply:"]
-    for key in ("business", "level", "attempts", "explain", "network", "allow", "users", "reaches"):
+    for key in ("profile", "business", "level", "attempts", "explain", "network", "allow", "users", "reaches"):
         value = s[key]
         value = ", ".join(value) if isinstance(value, list) else value
         if value != "" and value != []:
@@ -121,10 +121,13 @@ def session_start(event):
         lines.append(f"- network is STRICT: anything that goes out over the network (downloads, "
                      f"installs from a store, uploads, API calls) needs the person's OK unless it "
                      f"only reaches: {allowed}. Say exactly where it would go before asking.")
-    if rules:
-        lines += ["", "House rules, in the owner's words (stricter than a setting for their job, "
-                      "they win):", rules]
-    missing = [f for f in ("brand", "drafts", "ready") if not (ROOT / f).is_dir()]
+    meta, profile_rules = settings_mod.load_profile(s["profile"])
+    lines += ["", f"The work here is {s['profile']}: {meta['for']}. Working rules for it "
+                  f"(profiles/{s['profile']}.md), on top of CLAUDE.md:", "", profile_rules]
+    if rules:  # last, because they win: the owner's words over the profile's defaults
+        lines += ["", "House rules, in the owner's words (stricter than a setting or a profile "
+                      "rule for their job, they win):", rules]
+    missing = [f for f in meta["folders"] if not (ROOT / f).is_dir()]
     if missing:
         lines.append(f"\nThe workspace isn't set up ({', '.join(missing)} missing). Before the "
                      "first draft, run `python3 tools/setup.py`.")

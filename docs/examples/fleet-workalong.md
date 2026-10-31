@@ -1,5 +1,6 @@
 ---
 zipline: 1
+profile: infrastructure
 business: IT for a small company: a mixed fleet of Windows and Ubuntu machines (example)
 level: pattern
 explain: less

@@ -136,7 +136,8 @@ Tested on Ubuntu. macOS and Windows should work but haven't been tried yet; if y
 ## More
 
 - [docs/safeguards.md](docs/safeguards.md): what stops, how signing works, reading the journal
-- [docs/workalong.md](docs/workalong.md): every setting in `workalong.md`, and the levels
+- [docs/workalong.md](docs/workalong.md): every setting in `workalong.md`, the profiles and the levels
+- [profiles/](profiles/): the working rules for each kind of work: business, code, infrastructure
 - [CLAUDE.md](CLAUDE.md): the working rules the assistant reads, in plain words
 - [CONTRIBUTING.md](CONTRIBUTING.md): what helps most, and the checks to run
 - [SECURITY.md](SECURITY.md): reporting a problem privately, and what this doesn't protect

@@ -12,6 +12,10 @@ import pathlib, re, shutil, subprocess, sys, tempfile
 REPO = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path(__file__).resolve().parent.parent
 SABOTAGE = {  # claim-name fragment: (file, old, new) or a shell command
     "settings in front of the assistant": ("tools/hooks.py", "network is STRICT", "network is strict"),
+    "rules for this kind of work": ("tools/hooks.py", 'f"(profiles/{s[\'profile\']}.md), on top of CLAUDE.md:", "", profile_rules]',
+                                    'f"(profiles/{s[\'profile\']}.md), on top of CLAUDE.md:", ""]'),
+    "misspelled profile is reported": ("tools/settings.py", '    if settings["profile"] not in profile_names():',
+                                       '    if False:'),
     "announced on the last attempt": ("tools/hooks.py", "elif count == limit:", "elif count == limit + 1:"),
     "going past the limit": ("tools/hooks.py", 'journal("over-limit"', 'journal("over"'),
     'second "still wrong"': ("tools/hooks.py", "if cue and sum(recent) >= 2:", "if cue and sum(recent) >= 3:"),

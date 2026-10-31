@@ -1,5 +1,6 @@
 ---
 zipline: 1
+profile: business
 business: Rise & Crumb, a neighbourhood bakery (made-up example)
 level: new
 explain: more

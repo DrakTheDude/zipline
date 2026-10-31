@@ -84,6 +84,7 @@ def main(case):
     with tempfile.TemporaryDirectory() as tmp:
         project = pathlib.Path(tmp)
         shutil.copytree(TOOLS, project / "tools", ignore=shutil.ignore_patterns("__pycache__"))
+        shutil.copytree(TOOLS.parent / "profiles", project / "profiles")
         strict = case == "session-strict" or case.startswith("gate-")
         shutil.copy(FLEET if strict else BAKERY, project / "workalong.md")
         grants = project / ".zipline" / "grants.json"

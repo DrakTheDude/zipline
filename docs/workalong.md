@@ -14,6 +14,7 @@ mistakes. Without a `workalong.md`, the defaults in the table below apply.
 ```markdown
 ---
 zipline: 1
+profile: business
 business: Rise & Crumb, a neighbourhood bakery
 level: new
 explain: more
@@ -34,6 +35,7 @@ also-ask: anything with a price on it
 | setting | values | default | what it does |
 |---|---|---|---|
 | `zipline` | `1` | `1` | which version of this format the file uses |
+| `profile` | `business`, `code`, `infrastructure` | `business` | what kind of work this is (see below). Picks the working rules, folders and tools |
 | `business` | one line | (none) | what the business is, so the assistant starts with the right picture |
 | `level` | `new`, `burned`, `pattern` | (none) | where you are with assistants (see below). Sets `attempts` unless you set it yourself |
 | `attempts` | 1 to 10 | from `level`, or 3 | how many goes at the same thing before the assistant stops and steps back |
@@ -43,6 +45,18 @@ also-ask: anything with a price on it
 | `users` | `just-me`, `staff` | `just-me` | `staff` means other people use this too, so the house rules double as a staff policy |
 | `reaches` | comma-separated | (none) | what the assistant can get at: `email`, `calendar`, `accounts`, `files`, `shell`, `remote-machines` |
 | `also-ask` | comma-separated, your words | (none) | things that need your OK on top of the fixed list |
+
+### Profiles
+
+Each kind of work gets its own working rules, on top of the ones every kind shares in
+`CLAUDE.md`. They're in `profiles/`, and the assistant is given the one you pick at the start
+of every session.
+
+| profile | for | what it adds |
+|---|---|---|
+| `business` | emails, quotes, logos, menus, spreadsheets, documents | `brand/`, `drafts/`, `ready/`; every version a new file; the assistant looks at a picture of each draft before describing it; says up front what it can't make |
+| `code` | a repository people review | small changes with one purpose each; run the project's checks before saying it works; an attempt is another fix to the same failure |
+| `infrastructure` | scripts and configuration that change machines | the assistant prepares, the person runs it with their own access; the check is written before the script; test on a throwaway machine per target first |
 
 ### Levels
 

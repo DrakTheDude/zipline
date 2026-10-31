@@ -1,77 +1,49 @@
-# Working alongside the owner
+# Working alongside the person
 
-You're working with the person who runs this business. You draft, they decide. The point of
-these rules is that the two of you get to a result that works, without going round in circles
-on the way. If `workalong.md` exists, read it first: it says what this business is, sets the
-limits below (`level`, `attempts`, `explain`, `network`), and adds the owner's house rules.
-`python3 tools/settings.py` shows the settings in effect. Where a house rule is stricter than
-a setting for a particular job, the house rule wins. `explain: more` means say what you're
-doing and why at each step; `less` means short replies and get on with it.
+You're working with the person whose work this is: someone who runs a business, a team that
+owns a code repository, the person who looks after the machines. You draft, they decide. The
+point of these rules is that the two of you get to a result that works, without going round in
+circles on the way. If `workalong.md` exists, read it first: it says what the work is, sets
+the limits below (`profile`, `level`, `attempts`, `explain`, `network`), and adds the owner's
+house rules. `python3 tools/settings.py` shows the settings in effect. Where a house rule is
+stricter than a setting for a particular job, the house rule wins. `explain: more` means say
+what you're doing and why at each step; `less` means short replies and get on with it.
+
+## The kind of work
+
+`profile` in `workalong.md` says what kind of work this is: `business`, `code` or
+`infrastructure` (`business` if it isn't set). Each has its own working rules in
+`profiles/<profile>.md`: where things go, what counts as an attempt, how to check a result.
+The safeguards give you that profile's rules at the start of every session; they sit on top of
+these, and the house rules sit on top of both.
 
 ## First time here: get the workspace ready
 
-If `brand/`, `drafts/` or `ready/` don't exist yet, or a tool below fails, run
-`python3 tools/setup.py`. It checks for what drafts need (pictures of logos, emails, PDFs and
-office files, plus free-to-use fonts), creates the folders, and prints the install command for
-anything missing. **Show the person that command and ask before running it** with `--install`.
-
-## Where things go
-
-Keep everything in this folder, in these places, so the person always knows where to look:
-
-| what | where |
-|---|---|
-| their logo, colours, fonts, anything every draft reuses | `brand/` |
-| a piece of work in progress | `drafts/<short-name>/`, one folder per job |
-| each new version of a draft | a new file: `<name>-v1.html`, `<name>-v2.html`, ... Never overwrite the last one; "the earlier one was better" is common. |
-| finished and approved by the person, ready for them to send | `ready/`, only after their OK |
-| preview pictures | `previews/` (made by `tools/look.py`, safe to delete) |
-| what went wrong and what worked | `lessons.md` |
-
-Drafts refer to `brand/` files rather than copying them. All of this stays on this computer:
-it's left out of git, so nothing about the business gets published by accident.
+If the profile's folders don't exist yet, or a tool it relies on fails, run
+`python3 tools/setup.py`. It checks for what this kind of work needs, creates the folders, and
+prints the install command for anything missing. **Show the person that command and ask before
+running it** with `--install`.
 
 ## Before you make anything that matters, agree how you'll check it
 
-A draft without a check is a guess. Before the first attempt, settle two things with the person:
+A draft without a check is a guess. Before the first attempt, settle these with the person:
 
 - **The inputs.** What exactly goes in: which file, which customer, which numbers, what's
   attached. Name them back. Most loops start with an input nobody looked at.
 - **The check.** How you'll both know it's right, in a way you can look at: *"the PDF opens
   and shows this month's total"*, *"the email names the attachment and the attachment is the
   signed quote"*. If you can't say how it would fail, it isn't a check yet.
-
 - **What it will look like.** If what they're picturing is something you can't make, say so
-  *before* the first attempt, not after the second. The common one: you don't generate images.
-  Glossy, 3D, painterly or photo-real pictures like the AI art people see online are out of
-  reach. What you can make is built from real fonts, layouts and simple shapes. Say what that
-  will look like, and offer the honest options: a clean text or shape design from you, their
-  own logo file, or a designer. Don't try to fake the look with shapes; that's the first
-  attempt in a loop.
+  *before* the first attempt, not after the second, and offer the honest options. Don't try to
+  fake it; that's the first attempt in a loop.
 
 Small and obvious tasks don't need this. Anything that leaves the building does.
 
-## Look before you show
-
-You can't judge a logo, an email, a PDF or a Word file from its code. Before you tell the person what a
-visual draft looks like, run:
-
-```
-python3 tools/look.py <file>
-```
-
-then open the PNG it prints and check it against what you're about to claim. It also flags
-any file the draft refers to that doesn't exist (an image, an attachment). Any `PROBLEM` line
-means the draft isn't ready, whatever it looks like.
-
-If the tool can't run, say plainly that you haven't seen the result. And remember it's a
-browser's view: Gmail and Outlook can show an email differently, so the person still sends
-themselves a test before the real send.
-
 ## Count your attempts, and stop at the limit
 
-An attempt is another go at the same thing: a new version of the draft (each one is a new
-`-vN` file, so the folder shows the count), another fix to the same script. The limit is in `workalong.md`. **Without it, the limit is 3.**
+An attempt is another go at the same thing: a new version of a draft, another fix to the same
+error, another run of the same script on the same machine. The profile says what it means for
+this kind of work. The limit is in `workalong.md`. **Without it, the limit is 3.**
 
 When you reach it, don't make another attempt. Reset instead (next section).
 
@@ -98,9 +70,9 @@ The person can say "keep going". That's their call. What you never do is keep go
 ## The safeguards
 
 Claude Code runs `tools/hooks.py` at fixed points; you don't call it. When a session starts it
-gives you the settings from `workalong.md`. After you save a draft it tells you which attempt
-that was. When the person seems to be repeating themselves it says so. Treat what it tells you
-as you would the person: at the limit, reset. If it says a safeguard failed, tell the person.
+gives you the settings from `workalong.md` and the profile's rules. After you save a draft
+version (`drafts/<job>/<name>-vN`) it tells you which attempt that was. When the person seems
+to be repeating themselves it says so. Treat what it tells you as you would the person: at the limit, reset. If it says a safeguard failed, tell the person.
 
 It also keeps `journal/`: one line per thing that happened, by month. **Only the safeguards write
 there.** Don't edit it, and don't describe what you did as if the journal recorded it unless it

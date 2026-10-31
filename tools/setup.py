@@ -4,13 +4,15 @@
 usage: python3 tools/setup.py             check only, and print the install command
        python3 tools/setup.py --install   run that install command (ask the person first)
 
-It also creates the working folders (brand/, drafts/, ready/) if they're missing.
+What it checks and which folders it makes depend on the profile in workalong.md (business:
+brand/, drafts/, ready/ and the tools that turn drafts into pictures). See profiles/.
 Exit code = the number of missing tools that drafts depend on.
 """
 import os, platform, shutil, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FOLDERS = ["brand", "drafts", "ready"]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import settings as settings_mod
 
 # name, how to detect it, needed for drafts?, what it's for, package per manager
 TOOLS = [
@@ -68,12 +70,16 @@ def fonts_present():
 
 
 def main(install):
-    for folder in FOLDERS:
+    profile = settings_mod.load()[0]["profile"]
+    meta = settings_mod.load_profile(profile)[0]
+    for folder in meta["folders"]:
         os.makedirs(os.path.join(ROOT, folder), exist_ok=True)
     mgr = manager()
-    print(f"Computer: {platform.system()} · installer: {mgr or 'none found'}\n")
+    print(f"Profile: {profile} · computer: {platform.system()} · installer: {mgr or 'none found'}\n")
     missing, needed_missing, packages = [], 0, []
     for name, commands, needed, purpose, pkgs in TOOLS:
+        if name not in meta["tools"]:
+            continue
         found = next((c for c in commands if shutil.which(c)), None)
         mark = "ok     " if found else ("MISSING" if needed else "missing")
         print(f"  {mark} {name:<18} {purpose}")
@@ -85,12 +91,16 @@ def main(install):
                 packages += pkg.split() if not pkg.startswith("--cask") else [pkg]
             else:
                 print(f"          no package known for {name} on this computer: install it by hand")
-    fonts = fonts_present()
-    print(f"  {'ok     ' if fonts else 'missing' if fonts is False else '?      '} {'open fonts':<18} "
-          "free-to-use fonts for logos and documents")
+    fonts = fonts_present() if "open fonts" in meta["tools"] else True
+    if "open fonts" in meta["tools"]:
+        print(f"  {'ok     ' if fonts else 'missing' if fonts is False else '?      '} {'open fonts':<18} "
+              "free-to-use fonts for logos and documents")
     if fonts is False and FONTS.get(mgr):
         packages += FONTS[mgr].split() if mgr != "brew" else FONTS[mgr].split(",")
-    print("\nFolders ready: " + ", ".join(f + "/" for f in FOLDERS))
+    if meta["folders"]:
+        print("\nFolders ready: " + ", ".join(f + "/" for f in meta["folders"]))
+    if not meta["tools"]:
+        print(f"The {profile} profile needs nothing extra installed.")
 
     cmds = install_commands(mgr, packages)
     if not cmds:
