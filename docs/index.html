@@ -42,20 +42,31 @@
 </section>
 
 <section>
-  <h2>Set it up for your business</h2>
+  <h2>Set it up for your work</h2>
   <p>Answer a few questions and this page writes a file called <code>workalong.md</code>. Put
     it in the top folder of your zipline copy and the assistant works the way it says.
     <strong>Your answers never leave this page.</strong> Nothing is sent anywhere; the file is
     made right here in your browser.</p>
   <p class="examples">Or start from an example:
     <button type="button" data-example="bakery">a bakery</button>
+    <button type="button" data-example="webapp">two developers with a web app</button>
     <button type="button" data-example="fleet">an IT person with a fleet of computers</button>
   </p>
 
   <form id="form" autocomplete="off">
     <fieldset>
-      <legend>Your business</legend>
-      <label for="business">What's the business, in a line?</label>
+      <legend>The kind of work</legend>
+      <p class="hint">Each kind gets its own working rules and tools, on top of the ones they
+        all share.</p>
+      <div class="choices">
+        <label><input type="radio" name="profile" value="business" checked> Running a business:
+          emails, quotes, logos, menus, spreadsheets, documents</label>
+        <label><input type="radio" name="profile" value="code"> A code project people review:
+          an app, a website, a service</label>
+        <label><input type="radio" name="profile" value="infrastructure"> Looking after machines:
+          installs, images, deployments, a fleet</label>
+      </div>
+      <label for="business" id="business-label">What's the business, in a line?</label>
       <input id="business" name="business" type="text" maxlength="200"
              placeholder="e.g. a neighbourhood bakery">
     </fieldset>
@@ -88,6 +99,16 @@
 
     <fieldset>
       <legend>Your setup</legend>
+      <div data-for="code infrastructure" hidden>
+        <p class="q">Who reviews the work before it's merged?</p>
+        <div class="choices">
+          <label><input type="radio" name="team" value="solo"> Just me: I commit and push myself</label>
+          <label><input type="radio" name="team" value="pair"> Two of us: the other one reviews</label>
+          <label><input type="radio" name="team" value="team"> Three or more: two reviews</label>
+        </div>
+        <p class="hint">With two or more, nothing is committed or pushed to main from the
+          assistant's side: work goes on a branch and through a pull request.</p>
+      </div>
       <p class="q">Who will use this?</p>
       <div class="choices">
         <label><input type="radio" name="users" value="just-me"> Just me</label>
@@ -174,19 +195,30 @@
 (function () {
   const form = document.getElementById("form");
   const EXAMPLES = {
-    bakery: { business: "Rise & Crumb, a neighbourhood bakery", wrong: "no",
+    bakery: { profile: "business", business: "Rise & Crumb, a neighbourhood bakery", wrong: "no",
       trusted: "no", terminal: "no", users: "just-me", computer: "home",
       reaches: ["email", "files"], alsoAsk: "anything with a price on it",
       rules: "- Prices come from the price list in brand/, never from memory.\n- Every customer email gets a test send to me first." },
-    fleet: { business: "IT for a small company: Windows and Ubuntu machines", wrong: "stopped", trusted: "yes", terminal: "yes", users: "staff", computer: "managed",
+    webapp: { profile: "code", business: "A booking app for a dog groomer, two developers",
+      wrong: "once", trusted: "yes", terminal: "yes", team: "pair", users: "staff",
+      computer: "home", reaches: ["files", "shell"], alsoAsk: "changing the database schema",
+      rules: "- Every change comes with a test that would have failed without it.\n- No new dependencies without asking." },
+    fleet: { profile: "infrastructure", team: "solo",
+      business: "IT for a small company: Windows and Ubuntu machines", wrong: "stopped",
+      trusted: "yes", terminal: "yes", users: "staff", computer: "managed",
       allow: "archive.ubuntu.com, github.com", reaches: ["files", "shell", "remote-machines"],
       alsoAsk: "anything that runs on more than one machine",
       rules: "- Nothing reaches the fleet untested: each script runs in a fresh VM per OS first.\n- Write the check before the script." },
   };
 
+  const WORDING = {
+    business: { label: "What's the business, in a line?", example: "e.g. a neighbourhood bakery" },
+    code: { label: "What's the project, in a line?", example: "e.g. the booking app for our salon, two developers" },
+    infrastructure: { label: "What do you look after, in a line?", example: "e.g. 40 office machines, Windows and Ubuntu" },
+  };
   function answers() {
     const d = new FormData(form);
-    return { business: d.get("business"), wrong: d.get("wrong"),
+    return { profile: d.get("profile"), team: d.get("team"), business: d.get("business"), wrong: d.get("wrong"),
       trusted: d.get("trusted"), terminal: d.get("terminal"), users: d.get("users"),
       computer: d.get("computer"), allow: d.get("allow"), reaches: d.getAll("reaches"),
       alsoAsk: d.get("alsoAsk"), rules: d.get("rules") };
@@ -213,6 +245,12 @@
       level ? LEVELS[level].name : "answer the questions above";
     document.getElementById("level-says").textContent = level ? LEVELS[level].says : "";
     document.getElementById("allow-box").hidden = a.computer !== "managed";
+    // Questions that only mean something for some kinds of work.
+    document.querySelectorAll("[data-for]").forEach((el) =>
+      (el.hidden = !el.dataset.for.split(" ").includes(a.profile || "business")));
+    const say = WORDING[a.profile] || WORDING.business;
+    document.getElementById("business-label").textContent = say.label;
+    document.getElementById("business").placeholder = say.example;
     const warn = problems(a);
     const w = document.getElementById("warn");
     w.hidden = !warn.length;

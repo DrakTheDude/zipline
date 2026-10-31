@@ -22,6 +22,11 @@ const LEVELS = {
 };
 
 const REACHES = ["email", "calendar", "accounts", "files", "shell", "remote-machines"];
+// The kinds of work, as in profiles/. Each picks its own working rules, folders and plugins.
+const PROFILES = ["business", "code", "infrastructure"];
+// Who reviews: code and infrastructure live in git repositories; a business folder doesn't.
+const TEAMS = ["solo", "pair", "team"];
+const TEAM_PROFILES = ["code", "infrastructure"];
 // Same wording check as tools/settings.py: also-ask can only add.
 const REMOVES = /^(no |not |skip |never ask|don't|dont |do not)/i;
 
@@ -53,7 +58,8 @@ function problems(a) {
 function build(a) {
   const level = levelFrom(a);
   const network = a.computer === "managed" ? "strict" : "standard";
-  const lines = ["---", "zipline: 1"];
+  const profile = PROFILES.includes(a.profile) ? a.profile : "business";
+  const lines = ["---", "zipline: 1", `profile: ${profile}`];
   const business = oneLine(a.business);
   if (business) lines.push(`business: ${business}`);
   if (level) lines.push(`level: ${level}`);
@@ -64,6 +70,7 @@ function build(a) {
   lines.push(`users: ${a.users === "staff" ? "staff" : "just-me"}`);
   const reaches = (a.reaches || []).filter((r) => REACHES.includes(r));
   if (reaches.length) lines.push(`reaches: ${reaches.join(", ")}`);
+  if (TEAM_PROFILES.includes(profile) && TEAMS.includes(a.team)) lines.push(`team: ${a.team}`);
   const alsoAsk = items(a.alsoAsk).filter((x) => !REMOVES.test(x));
   if (alsoAsk.length) lines.push(`also-ask: ${alsoAsk.join(", ")}`);
   lines.push("---", "", "# How we work here", "");
@@ -74,4 +81,4 @@ function build(a) {
   return lines.join("\n") + "\n";
 }
 
-if (typeof module !== "undefined") module.exports = { build, levelFrom, problems, LEVELS };
+if (typeof module !== "undefined") module.exports = { build, levelFrom, problems, LEVELS, TEAM_PROFILES };
