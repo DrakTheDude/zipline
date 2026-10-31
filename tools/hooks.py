@@ -109,7 +109,8 @@ def session_start(event):
     lines = ["zipline settings for this session (from workalong.md, loaded automatically; "
              "these apply to everything you do here, not only drafts):" if found else
              "zipline: no workalong.md here, so the defaults apply:"]
-    for key in ("profile", "business", "level", "attempts", "explain", "network", "allow", "users", "reaches"):
+    for key in ("profile", "business", "level", "attempts", "explain", "network", "allow", "users",
+                "reaches", "team", "commit-files"):
         value = s[key]
         value = ", ".join(value) if isinstance(value, list) else value
         if value != "" and value != []:
@@ -121,6 +122,10 @@ def session_start(event):
         lines.append(f"- network is STRICT: anything that goes out over the network (downloads, "
                      f"installs from a store, uploads, API calls) needs the person's OK unless it "
                      f"only reaches: {allowed}. Say exactly where it would go before asking.")
+    if s["team"] != "solo":
+        lines.append(f"- team is {s['team'].upper()}: nothing is committed or pushed to main here; "
+                     f"the safeguards refuse it. Work on a branch named for the piece of work and "
+                     f"open a pull request for {'one review' if s['team'] == 'pair' else 'two reviews'}.")
     meta, profile_rules = settings_mod.load_profile(s["profile"])
     lines += ["", f"The work here is {s['profile']}: {meta['for']}. Working rules for it "
                   f"(profiles/{s['profile']}.md), on top of CLAUDE.md:", "", profile_rules]

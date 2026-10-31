@@ -8,7 +8,7 @@ cases: session-strict, at-limit, over-limit, outside-drafts, repeat, repeat-forg
        gate-gimp, gate-signed-once, gate-yes, gate-changed, gate-expired, gate-sealed,
        gate-free, gate-fail-closed, gate-read, gate-reworded, gate-near-miss, gate-notification,
        gate-shell-write, gate-heredoc, gate-stale-yes, git-branch, git-size, git-push-main,
-       git-push-claims, gh-write
+       git-push-claims, gh-write, session-team
 """
 import json, os, pathlib, shutil, subprocess, sys, tempfile
 
@@ -155,6 +155,9 @@ def main(case):
                       "<pasted_content>\nError: build failed. Same problem as yesterday.\n"
                       "</pasted_content>\nand this from the build server"]
             print("RESULT " + " ".join(nudged(typed(project, p)) for p in pastes))
+        elif case == "session-team":         # the assistant hears the git rules before it commits
+            repo(project, "pair")
+            print(hook(project, "session-start", {"session_id": "t", "source": "startup"}))
         elif case == "git-branch":           # pair: nothing committed on main; a branch is fine
             git = repo(project, "pair")
             stage(project, git, 1)
