@@ -40,6 +40,8 @@ SABOTAGE = {  # claim-name fragment: (file, old, new) or a shell command
     "knowing which Python runs here": ("tools/hooks.py", '    py = python_command()\n', '    py = "python3"\n'),
     "where their installers put them": ("tools/look.py", "return shutil.which(name) or (windows_place(name) if WINDOWS else None)",
                                         "return shutil.which(name)"),
+    "same line as a here-document's start": ("tools/gates.py", 'return m.group(0) if prog in SHELLS else m.group(3) + "\\n"',
+                                             'return m.group(0) if prog in SHELLS else "\\n"'),
     "whichever Python runs it": ("tools/gates.py", 're.fullmatch(r"py(thon[\\d.]*)?(\\.exe)?", tool.lower())',
                                  'tool == "python3"'),
     "announced on the last attempt": ("tools/hooks.py", "elif count == limit:", "elif count == limit + 1:"),

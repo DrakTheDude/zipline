@@ -462,7 +462,7 @@ def written_paths(words, cwd):
     return [str((cwd / os.path.expandvars(os.path.expanduser(p))).resolve()) for p in out if p]
 
 
-HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n(.*?)\n\s*\2\s*(?:\n|$)", re.S)
+HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1([^\n]*)\n(.*?)\n\s*\2\s*(?:\n|$)", re.S)
 SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
 
 
@@ -470,13 +470,14 @@ def shell_text(command):
     """The command as the shell will run it. A here-document's body is input for the program it's
     fed to, not shell syntax: a Python script's string ">> ~/x" is not a redirect. The first
     version read it as one and stopped a test script. Bodies fed to a shell are kept, because
-    those really are commands."""
+    those really are commands. The rest of the line the here-document starts on is always
+    kept: it's shell. Dropping it let `git commit -F - <<'E' && git push` push unsigned."""
     def keep_or_drop(m):
         line_start = command.rfind("\n", 0, m.start()) + 1
         words = command[line_start:m.start()].split()
         prog = pathlib.Path(next((w for w in words if not re.match(r"^\w+=", w)
                                   and w not in ("sudo", "env")), "")).name
-        return m.group(0) if prog in SHELLS else "\n"
+        return m.group(0) if prog in SHELLS else m.group(3) + "\n"
     return HEREDOC.sub(keep_or_drop, command)
 
 
