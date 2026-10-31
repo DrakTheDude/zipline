@@ -34,10 +34,6 @@ rules and tools for that kind:
 | **code** | a repository people review | small changes with one purpose each; runs the checks before saying it works; branches and pull requests when someone reviews |
 | **infrastructure** | scripts that change machines: installs, images, deployments | the assistant prepares, the person runs it with their own access; the check is written before the script; tested on a throwaway machine first |
 
-> **This is not an image generator.** It won't make AI art, so don't ask it to. Graphics are built
-> the way a designer builds them: real fonts, real layouts, vector shapes (HTML/SVG → PDF), like
-> the curve above. You can open, edit and reuse every file.
-
 ## What it does
 
 - **Agrees the check before the work.** What goes in, and how you'll both know it's right,
@@ -60,8 +56,13 @@ rules and tools for that kind:
 ## What it looks like
 
 Asked for a glossy 3D logo, the assistant says before trying that it builds from fonts and
-shapes, and offers a clean text logo, the owner's own logo file, or a designer. Asked later to
-email the quote to James, it stops:
+shapes, and offers a clean text logo, the owner's own logo file, or a designer.
+
+> **This is not an image generator.** It won't make AI art, so don't ask it to. Graphics are built
+> the way a designer builds them: real fonts, real layouts, vector shapes (HTML/SVG → PDF), like
+> the curve above. You can open, edit and reuse every file.
+
+Asked later to email the quote to James, it stops:
 
 > This needs your OK before it runs. It sends an email to james@example.com with
 > `ready/quote.pdf` attached. To go ahead, type: **email james**
