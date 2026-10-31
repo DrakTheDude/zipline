@@ -62,6 +62,11 @@ type the phrase.** That lets exactly that action run, once. Then it stops again 
 Some things are never allowed, signed or not: changing `journal/` or `.zipline/`, where the
 safeguards keep their records.
 
+Changing what the safeguards are made of stops for `change safeguards`: anything in
+`.claude/` (one line in `.claude/settings.local.json` can switch every safeguard off), the
+safeguard code in `tools/`, the rules in `profiles/`, `CLAUDE.md` and `ZIPLINE.md`. Changing
+them is your call, so it's signed rather than refused, but you see which file first.
+
 ### Git rules
 
 `team` in `workalong.md` says how many people review the work.

@@ -66,6 +66,10 @@ Be clear about this before trusting it with anything sensitive:
   something else (a script that quietly sends email, or writes a file without saying so) gets
   past it. It guards against an assistant that is confident and wrong, not one trying to hide
   what it does.
+- **The safeguards' own files need a signature to change:** `.claude/`, the safeguard code in
+  `tools/`, `profiles/`, `CLAUDE.md` and `ZIPLINE.md`, by the editor or by recognisable shell
+  writes. A program that writes them without saying so on the command line gets past, as
+  above.
 - **The journal and `.zipline/` are protected by the same reading of commands.** Direct writes,
   redirects and any non-read-only command that names them are refused. A deliberately evasive
   command could still reach them. The rule errs the other way too: a shell command that merely

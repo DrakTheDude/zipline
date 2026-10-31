@@ -45,8 +45,13 @@ python3 tools/check_claims_can_fail.py     and every one of them can still go re
 - **Editing the gate with its hooks on, keep it working at every step.** If an edit leaves
   `tools/gates.py` or `tools/hooks.py` broken (a call to a function you haven't added yet), the
   gate fails closed and refuses every editor action, including the one that would fix it. Add
-  new functions before anything calls them. If you lock yourself out,
-  `git checkout -- tools/gates.py` puts back the last working version.
+  new functions before anything calls them. If you lock yourself out, run
+  `git checkout -- tools/gates.py` yourself, in a terminal: it puts back the last working
+  version.
+- **Every edit to the safeguards is signed.** `.claude/`, `tools/hooks.py`, `tools/gates.py`,
+  `tools/settings.py`, `profiles/`, `CLAUDE.md` and `ZIPLINE.md` stop for `change safeguards`,
+  one signature per edit. That's on purpose; batch your changes into fewer, bigger edits when
+  working on them with an assistant.
 
 ## House rules, and why
 

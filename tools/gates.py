@@ -370,6 +370,22 @@ def gh_gate(words):
     return None
 
 
+# What the safeguards are made of. Changing any of these can switch them off: one line in
+# .claude/settings.local.json disables every hook, and the assistant could write it unasked.
+# Signed, not refused: changing them is the person's call, made with the specifics in front of
+# them. (tools/setup.py writes its plugin list there itself, which the gate doesn't see.)
+SAFEGUARDS = (".claude", "tools/hooks.py", "tools/gates.py", "tools/settings.py", "profiles",
+              "CLAUDE.md", "ZIPLINE.md")
+
+
+def safeguard_file(path, root):
+    try:
+        rel = pathlib.Path(path).expanduser().resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return ""
+    return rel if any(rel == s or rel.startswith(s + "/") for s in SAFEGUARDS) else ""
+
+
 def write_gate(path, root):
     """The one rule for writing a file, whichever tool does it. The editor had this rule and the
     shell didn't: `cp` or `sed -i` into a folder outside this one went through unsigned while the
@@ -379,6 +395,11 @@ def write_gate(path, root):
     if in_project(path, root) and inside(path, root, *SEALED):
         return Gate("change", "safeguards", blocked="journal/ and .zipline/ are the "
                     "safeguards' own record. Nothing the assistant writes may change them.")
+    rel = safeguard_file(path, root)
+    if rel:
+        return Gate("change", "safeguards", [f"changes {rel}, part of how zipline's safeguards "
+                                             "and rules work", "a change here can switch them "
+                                             "off or loosen them"])
     if inside(path, root, "ready"):
         return Gate("approve", name, [f"puts {pathlib.Path(path).name} in ready/, which "
                                       "means you've approved it to go out"])
