@@ -97,7 +97,9 @@ button {
   cursor: pointer;
 }
 #download { background: var(--accent); color: var(--accent-ink); }
-.examples button { margin: 4px 4px 0 0; }
+.examples { margin: 0 0 24px; }
+.examples p { margin: 0 0 8px; color: var(--muted); }
+.example-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
 footer { margin-top: 48px; color: var(--muted); font-size: 0.9rem; }
