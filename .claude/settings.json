@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks.py\" session-start"
+            "command": "for p in python3 python py; do $p -c \"\" </dev/null >/dev/null 2>&1 && break; done; $p \"$CLAUDE_PROJECT_DIR/tools/hooks.py\" session-start"
           }
         ]
       }
@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks.py\" prompt"
+            "command": "for p in python3 python py; do $p -c \"\" </dev/null >/dev/null 2>&1 && break; done; $p \"$CLAUDE_PROJECT_DIR/tools/hooks.py\" prompt"
           }
         ]
       }
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks.py\" after-edit"
+            "command": "for p in python3 python py; do $p -c \"\" </dev/null >/dev/null 2>&1 && break; done; $p \"$CLAUDE_PROJECT_DIR/tools/hooks.py\" after-edit"
           }
         ]
       }
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks.py\" before-tool"
+            "command": "for p in python3 python py; do $p -c \"\" </dev/null >/dev/null 2>&1 && break; done; $p \"$CLAUDE_PROJECT_DIR/tools/hooks.py\" before-tool"
           }
         ]
       }

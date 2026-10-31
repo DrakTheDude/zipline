@@ -33,6 +33,12 @@ SABOTAGE = {  # claim-name fragment: (file, old, new) or a shell command
     "one expiry is journalled once": ("tools/hooks.py", "    if expired:\n        save_grants(keep)\n", ""),
     "says what's wrong with workalong.md": ("tools/setup.py", 'sys.exit(report_problems() + main("--install" in sys.argv[1:]))',
                                             'sys.exit(main("--install" in sys.argv[1:]))'),
+    "only opens the Microsoft Store": (".claude/settings.json",
+                                       '"for p in python3 python py; do $p -c \\"\\" </dev/null >/dev/null 2>&1 && break; done; '
+                                       '$p \\"$CLAUDE_PROJECT_DIR/tools/hooks.py\\" session-start"',
+                                       '"python3 \\"$CLAUDE_PROJECT_DIR/tools/hooks.py\\" session-start"'),
+    "whichever Python runs it": ("tools/gates.py", 're.fullmatch(r"py(thon[\\d.]*)?(\\.exe)?", tool.lower())',
+                                 'tool == "python3"'),
     "announced on the last attempt": ("tools/hooks.py", "elif count == limit:", "elif count == limit + 1:"),
     "going past the limit": ("tools/hooks.py", 'journal("over-limit"', 'journal("over"'),
     'second "still wrong"': ("tools/hooks.py", "if cue and sum(recent) >= 2:", "if cue and sum(recent) >= 3:"),

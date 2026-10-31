@@ -76,7 +76,17 @@ branch, with the type checker and the tests as the check.
 ## Getting started
 
 You need [Claude Code](https://claude.com/claude-code) (a Claude subscription or your own API
-key), git, and Python 3.
+key), git, and Python 3. To install Claude Code:
+
+```
+curl -fsSL https://claude.ai/install.sh | bash        # macOS, Linux
+irm https://claude.ai/install.ps1 | iex                # Windows, in PowerShell
+```
+
+On Windows, install [Git for Windows](https://git-scm.com/downloads/win) (Claude Code runs
+the safeguards with its Git Bash) and Python from [python.org](https://www.python.org/downloads/).
+Where the steps below say `python3`, type `python` (or `py`) instead: Windows' own `python3`
+only opens the Microsoft Store. The safeguards find the real one by themselves.
 
 **1. Answer a few questions** on the [zipline page](https://drakthedude.github.io/zipline/): the
 kind of work, what's happened so far with assistants, who reviews the work, your house rules.
@@ -180,8 +190,9 @@ around them. A new plugin is one line in a profile, and a new kind of work is on
 
 ## Tested on
 
-Ubuntu, with made-up businesses, a few real sessions, and throwaway repositories. macOS and
-Windows should work but haven't been tried yet; if you try,
+Ubuntu, with made-up businesses, a few real sessions, and throwaway repositories. One first
+session on Windows, which found that `python3` there is only a Store shortcut. macOS
+should work but hasn't been tried yet; if you try,
 [CONTRIBUTING.md](CONTRIBUTING.md) says what's most useful to send.
 
 ## More

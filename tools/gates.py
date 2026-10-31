@@ -191,7 +191,10 @@ def classify_bash(command, s, root):
     for words in segments(shell_text(command)):
         tool = pathlib.Path(words[0]).name
         args = [w for w in words[1:] if not w.startswith("-")]
-        if tool == "python3" and "tools/setup.py" in " ".join(words) and "--install" in words:
+        # Any Python: Windows has no real python3, so there it's `python` or `py -3`, and
+        # `tools\setup.py`. Matching python3 only let `python tools/setup.py --install` through.
+        if (re.fullmatch(r"py(thon[\d.]*)?(\.exe)?", tool.lower()) and "--install" in words
+                and any(w.replace("\\", "/").endswith("tools/setup.py") for w in words)):
             gates.append(Gate("install", "setup", ["the tools tools/setup.py listed as missing",
                                                    "runs with sudo where the installer needs it"]))
             continue
