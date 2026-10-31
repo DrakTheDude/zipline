@@ -1,7 +1,7 @@
 # Contributing
 
-zipline has been tested on **one Ubuntu machine, with a handful of made-up businesses,
-throwaway repositories and a few real sessions**. That's the honest limit of it, and it's the thing you can most easily help with.
+zipline has been tested on **one Ubuntu machine and one Windows machine, with a handful of
+made-up businesses, throwaway repositories and a few real sessions**. That's the honest limit of it, and it's the thing you can most easily help with.
 
 ## The most useful things you can send
 
@@ -16,8 +16,9 @@ first.** A transcript with `[customer]` and `[price]` in it is just as useful. T
 [docs/safeguards.md](docs/safeguards.md) says what's meant to stop. If it's something that could
 send, delete or spend without the person, report it privately (see [SECURITY.md](SECURITY.md)).
 
-**3. `tools/setup.py` on a Mac, Windows or Fedora.** Only Ubuntu has been run for real. Paste
-the whole output, and say whether the install command it printed actually worked.
+**3. `tools/setup.py` on a Mac, Fedora, or Windows with something missing.** Ubuntu has been
+run for real, and Windows up to the check; nobody has run the winget installs it offers yet.
+Paste the whole output, and say whether the install command it printed actually worked.
 
 **4. A draft that `tools/look.py` got wrong.** It said OK and the file was broken, or it flagged
 something that was fine. Attach the draft if you can share it, or describe its shape if you

@@ -196,10 +196,17 @@ around them. A new plugin is one line in a profile, and a new kind of work is on
 
 ## Tested on
 
-Ubuntu, with made-up businesses, a few real sessions, and throwaway repositories. One first
-session on Windows, which found that `python3` there is only a Store shortcut. macOS
-should work but hasn't been tried yet; if you try,
-[CONTRIBUTING.md](CONTRIBUTING.md) says what's most useful to send.
+- **Ubuntu:** made-up businesses, real sessions, throwaway repositories, and a fresh clone
+  set up from the README.
+- **Windows:** fresh clones of the business setup, from the first message through
+  `tools/setup.py`. The first sessions found three Windows-only problems, all fixed:
+  `python3` there only opens the Microsoft Store, so the safeguards didn't run; the install
+  stop only recognised `python3`; and setup missed programs Windows doesn't put on its PATH.
+  The winget installs that setup offers haven't been run yet.
+- **macOS:** not tried yet.
+
+If you try it somewhere new, [CONTRIBUTING.md](CONTRIBUTING.md) says what's most useful to
+send.
 
 ## More
 
