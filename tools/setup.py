@@ -12,7 +12,7 @@ import json, os, platform, shutil, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import settings as settings_mod
+import look, settings as settings_mod
 
 # name, how to detect it, needed for drafts?, what it's for, package per manager
 TOOLS = [
@@ -132,7 +132,7 @@ def main(install):
     for name, commands, needed, purpose, pkgs in TOOLS:
         if name not in meta["tools"]:
             continue
-        found = next((c for c in commands if shutil.which(c)), None)
+        found = next((c for c in commands if look.find(c)), None)
         mark = "ok     " if found else ("MISSING" if needed else "missing")
         print(f"  {mark} {name:<18} {purpose}")
         if not found:

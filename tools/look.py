@@ -18,10 +18,37 @@ Exit code = the number of problems found, so 0 means it rendered and nothing was
 Needs: librsvg2-bin, poppler-utils, and firefox or weasyprint. LibreOffice for office files.
 python3 tools/setup.py checks all of these.
 """
-import html.parser, pathlib, shutil, subprocess, sys, tempfile, urllib.parse
+import html.parser, os, pathlib, shutil, subprocess, sys, tempfile, urllib.parse
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "previews"
+
+# Where Windows installers put these. They don't add them to PATH, winget included, so a
+# Firefox that was there all along was reported missing, and an installed LibreOffice would be
+# reported missing again after setup installed it.
+WINDOWS_PLACES = {
+    "firefox": ("Mozilla Firefox", "firefox.exe"),
+    "soffice": ("LibreOffice", "program", "soffice.exe"),
+    "inkscape": ("Inkscape", "bin", "inkscape.exe"),
+}
+
+
+def windows_place(name, env=os.environ):
+    for base in ("ProgramFiles", "ProgramFiles(x86)", "LOCALAPPDATA"):
+        if name in WINDOWS_PLACES and env.get(base):
+            for root in (pathlib.Path(env[base]), pathlib.Path(env[base]) / "Programs"):
+                path = root.joinpath(*WINDOWS_PLACES[name])
+                if path.is_file():
+                    return str(path)
+    return None
+
+
+WINDOWS = os.name == "nt"
+
+
+def find(name):
+    """The program's path, from PATH or, on Windows, where its installer put it."""
+    return shutil.which(name) or (windows_place(name) if WINDOWS else None)
 
 
 class Refs(html.parser.HTMLParser):
@@ -53,9 +80,10 @@ def run(cmd):
 
 
 def render_html(src, png):
-    if shutil.which("firefox"):
+    firefox = find("firefox")
+    if firefox:
         with tempfile.TemporaryDirectory() as profile:  # own profile: works while Firefox is open
-            ok, err = run(["firefox", "--headless", "--no-remote", "--profile", profile,
+            ok, err = run([firefox, "--headless", "--no-remote", "--profile", profile,
                            "--screenshot", str(png), "--window-size=800,1400", src.as_uri()])
         if ok and png.exists():
             return [png], None
@@ -81,7 +109,7 @@ OFFICE = (".docx", ".doc", ".odt", ".rtf", ".xlsx", ".xls", ".ods", ".pptx", ".p
 
 
 def render_office(src, png):
-    soffice = shutil.which("soffice") or shutil.which("libreoffice")
+    soffice = find("soffice") or find("libreoffice")
     if not soffice:
         return [], "LibreOffice missing: run python3 tools/setup.py"
     with tempfile.TemporaryDirectory() as tmp:
