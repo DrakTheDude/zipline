@@ -237,6 +237,26 @@ def deny(reason):
                                              "permissionDecisionReason": reason}}))
 
 
+# The verbs the gate asks for (tools/gates.py). A short message shaped like "<verb> <target>"
+# with no request waiting is most likely a signature that has nothing to sign: the assistant
+# asked for it before trying the action, so the gate never raised a request. That happened, and
+# the person's "push origin" did nothing while they believed it had signed.
+SIGN_VERBS = {"install", "uninstall", "email", "send", "upload", "push", "delete", "move",
+              "overwrite", "write", "approve", "connect", "charge", "change", "commit"}
+
+
+def unasked(typed):
+    words = typed.split()
+    if not 2 <= len(words) <= 3 or words[0] not in SIGN_VERBS:
+        return False
+    journal("not-signed", f'"{typed[:40]}" with no request waiting for it')
+    say("UserPromptSubmit", f"zipline: the person typed '{typed}', which looks like a signature, "
+        "but no request is waiting for it, so nothing was signed. If they meant it as one, tell "
+        "them it didn't count yet, then try the action: the safeguards will raise the request, "
+        "and their phrase will count after that. If it was just an instruction, carry on.")
+    return True
+
+
 def sign(event):
     """If the message is a signature for a pending request, grant it. Returns True if this
     message was about a signature, so it isn't also read as the person repeating themselves."""
@@ -258,7 +278,7 @@ def sign(event):
                 "ran out of time unsigned, so it doesn't count. Tell them it expired; if they "
                 "still want it, try the action again and a fresh request will come up.")
             return True
-        return False
+        return unasked(typed)
     match = next((g for g in reversed(pending) if g["phrase"] == typed), None)
     if match:
         match["status"], match["granted_at"] = "granted", time.time()
@@ -285,7 +305,7 @@ def sign(event):
         say("UserPromptSubmit", f"zipline: that isn't a signature. Waiting for the person to "
             f"type exactly: {phrases}. Say so plainly; don't run the action.")
         return True
-    return False
+    return unasked(typed)
 
 
 # Claude Code also delivers its own messages through this event: when a subagent finishes, its

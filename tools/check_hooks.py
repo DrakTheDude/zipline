@@ -8,7 +8,7 @@ cases: session-strict, at-limit, over-limit, outside-drafts, repeat, repeat-forg
        gate-gimp, gate-signed-once, gate-yes, gate-changed, gate-expired, gate-sealed,
        gate-free, gate-fail-closed, gate-read, gate-reworded, gate-near-miss, gate-notification,
        gate-shell-write, gate-heredoc, gate-stale-yes, git-branch, git-size, git-push-main,
-       git-push-claims, gh-write, session-team
+       git-push-claims, gh-write, session-team, gate-unasked
 """
 import json, os, pathlib, shutil, subprocess, sys, tempfile
 
@@ -155,6 +155,11 @@ def main(case):
                       "<pasted_content>\nError: build failed. Same problem as yesterday.\n"
                       "</pasted_content>\nand this from the build server"]
             print("RESULT " + " ".join(nudged(typed(project, p)) for p in pastes))
+        elif case == "gate-unasked":         # a phrase typed before any request was raised
+            steps = [typed(project, "push origin"), before(project, "git push origin main"),
+                     typed(project, "push origin"), typed(project, "make the title bigger")]
+            words = ["unasked" if "nothing was signed" in x else verdict(x) for x in steps]
+            print("RESULT " + " ".join(["quiet" if w == "allowed" else w for w in words]))
         elif case == "session-team":         # the assistant hears the git rules before it commits
             repo(project, "pair")
             print(hook(project, "session-start", {"session_id": "t", "source": "startup"}))
